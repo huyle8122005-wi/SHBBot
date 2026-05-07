@@ -1,4 +1,3 @@
-
 # ruff: noqa: I001 - Imports structured for Jinja2 template conditionals
 """User management routes."""
 
@@ -77,6 +76,7 @@ async def get_avatar(user_id: UUID, user_service: UserSvc) -> Any:
     from fastapi import HTTPException
     from fastapi.responses import FileResponse
     from app.services.file_storage import get_file_storage
+
     user = await user_service.get_by_id(user_id)
     if not user.avatar_url:
         raise HTTPException(status_code=404, detail="No avatar set")

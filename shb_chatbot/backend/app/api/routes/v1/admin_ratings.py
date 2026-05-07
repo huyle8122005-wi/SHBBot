@@ -8,15 +8,14 @@ The endpoints are:
 - GET /admin/ratings/summary - Get aggregated rating statistics
 - GET /admin/ratings/export - Export ratings as JSON or CSV
 """
-from typing import Any
-from uuid import UUID
 
 import csv
 from collections.abc import AsyncIterable, AsyncIterator, Iterable, Iterator
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from io import StringIO
+from typing import Any
 
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse, StreamingResponse
 
 from app.api.deps import CurrentAdmin, MessageRatingSvc
@@ -31,9 +30,18 @@ router = APIRouter()
 
 _CSV_INJECTION_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
 _CSV_HEADER = [
-    "ID", "Message ID", "Conversation ID", "User ID",
-    "Rating", "Comment", "Message Content", "Message Role",
-    "User Email", "User Name", "Created At", "Updated At",
+    "ID",
+    "Message ID",
+    "Conversation ID",
+    "User ID",
+    "Rating",
+    "Comment",
+    "Message Content",
+    "Message Role",
+    "User Email",
+    "User Name",
+    "Created At",
+    "Updated At",
 ]
 
 
@@ -84,9 +92,7 @@ def _export_disposition(now: datetime, fmt: str) -> str:
     return f'attachment; filename="ratings_export_{now.strftime("%Y%m%d_%H%M%S")}.{fmt}"'
 
 
-def _json_export_response(
-    items: list[MessageRatingWithDetails], now: datetime
-) -> JSONResponse:
+def _json_export_response(items: list[MessageRatingWithDetails], now: datetime) -> JSONResponse:
     return JSONResponse(
         content={
             "ratings": [item.model_dump(mode="json") for item in items],
@@ -101,11 +107,13 @@ def _stream_csv_sync(
     chunks: Iterable[list[MessageRatingWithDetails]], now: datetime
 ) -> StreamingResponse:
     """Stream CSV row-by-row from a sync chunk iterable."""
+
     def generate() -> Iterator[str]:
         yield _serialize_csv_row(_CSV_HEADER)
         for chunk in chunks:
             for item in chunk:
                 yield _serialize_csv_row(_csv_row_values(item))
+
     return StreamingResponse(
         generate(),
         media_type="text/csv",
@@ -117,11 +125,13 @@ def _stream_csv_async(
     chunks: AsyncIterable[list[MessageRatingWithDetails]], now: datetime
 ) -> StreamingResponse:
     """Stream CSV row-by-row from an async chunk iterable."""
+
     async def generate() -> AsyncIterator[str]:
         yield _serialize_csv_row(_CSV_HEADER)
         async for chunk in chunks:
             for item in chunk:
                 yield _serialize_csv_row(_csv_row_values(item))
+
     return StreamingResponse(
         generate(),
         media_type="text/csv",

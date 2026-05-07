@@ -11,7 +11,6 @@ from pydantic import Field
 
 from app.schemas.base import BaseSchema, TimestampSchema
 
-
 # Tool Call Schemas
 
 
@@ -39,6 +38,7 @@ class ToolCallComplete(BaseSchema):
 
 class ToolCallRead(ToolCallBase):
     """Schema for reading a tool call (API response)."""
+
     id: UUID
     message_id: UUID
     result: str | None = None
@@ -67,6 +67,7 @@ class MessageCreate(MessageBase):
 
 class MessageFileRead(BaseSchema):
     """Schema for file attached to a message."""
+
     id: UUID
     filename: str
     mime_type: str
@@ -75,6 +76,7 @@ class MessageFileRead(BaseSchema):
 
 class MessageRead(MessageBase, TimestampSchema):
     """Schema for reading a message (API response)."""
+
     id: UUID
     conversation_id: UUID
     model_name: str | None = None
@@ -93,6 +95,7 @@ class MessageRead(MessageBase, TimestampSchema):
 
 class MessageReadSimple(MessageBase, TimestampSchema):
     """Simplified message schema without tool calls."""
+
     id: UUID
     conversation_id: UUID
     model_name: str | None = None
@@ -110,6 +113,7 @@ class ConversationBase(BaseSchema):
 
 class ConversationCreate(ConversationBase):
     """Schema for creating a conversation."""
+
     user_id: UUID | None = Field(default=None, description="Owner user ID")
 
 
@@ -122,6 +126,7 @@ class ConversationUpdate(BaseSchema):
 
 class ConversationRead(ConversationBase, TimestampSchema):
     """Schema for reading a conversation (API response)."""
+
     id: UUID
     user_id: UUID | None = None
     is_archived: bool = False
@@ -155,6 +160,8 @@ class ConversationWithLatestMessage(ConversationRead):
 
     latest_message: MessageReadSimple | None = None
     message_count: int = 0
+
+
 class ConversationAdminList(BaseSchema):
     """Schema for admin conversation list with message counts."""
 

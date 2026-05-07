@@ -13,9 +13,7 @@ from app.core.exceptions import AppException
 logger = logging.getLogger(__name__)
 
 
-async def app_exception_handler(
-    request: Request, exc: AppException
-) -> JSONResponse:
+async def app_exception_handler(request: Request, exc: AppException) -> JSONResponse:
     """Handle application exceptions.
 
     Logs 5xx errors as errors and 4xx as warnings.
@@ -51,9 +49,7 @@ async def app_exception_handler(
     )
 
 
-async def unhandled_exception_handler(
-    request: Request, exc: Exception
-) -> JSONResponse:
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handle unexpected exceptions.
 
     Logs the full exception but returns a generic error to the client

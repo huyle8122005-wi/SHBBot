@@ -1,4 +1,3 @@
-
 """Example Celery tasks."""
 
 import logging
@@ -38,7 +37,7 @@ def example_task(self: Any, message: str) -> dict[str, Any]:
     except Exception as exc:
         logger.error(f"Task failed: {exc}")
         # Retry with exponential backoff
-        raise self.retry(exc=exc, countdown=2 ** self.request.retries) from exc
+        raise self.retry(exc=exc, countdown=2**self.request.retries) from exc
 
 
 @shared_task(bind=True)  # type: ignore
@@ -57,10 +56,7 @@ def long_running_task(self: Any, duration: int = 10) -> dict[str, Any]:
     for i in range(duration):
         time.sleep(1)
         # Update task state with progress
-        self.update_state(
-            state="PROGRESS",
-            meta={"current": i + 1, "total": duration}
-        )
+        self.update_state(state="PROGRESS", meta={"current": i + 1, "total": duration})
         logger.info(f"Progress: {i + 1}/{duration}")
 
     return {

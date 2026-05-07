@@ -7,3 +7,4 @@ export { ChatInput } from "./chat-input";
 export { CopyButton } from "./copy-button";
 export { MarkdownContent } from "./markdown-content";
 export { ConversationSidebar } from "./conversation-sidebar";
+export { SuggestedQuestions } from "./suggested-questions";

@@ -4,8 +4,9 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useChat } from "@/hooks";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
+import { SuggestedQuestions } from "./suggested-questions";
 import { ToolApprovalDialog } from "./tool-approval-dialog";
-import { Bot, ChevronDown, Check } from "lucide-react";
+import { Bot, ChevronDown, Check, Sparkles, TrendingUp, ShieldAlert, BarChart3, Globe2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui";
 import type { PendingApproval, Decision } from "@/types";
 import { useConversationStore, useChatStore } from "@/stores";
@@ -188,6 +189,17 @@ interface ChatUIProps {
   onResumeDecisions?: (decisions: Decision[]) => void;
 }
 
+const SHB_SUGGESTIONS = [
+  "Tại sao nên đầu tư vào cổ phiếu SHB lúc này?",
+  "Dự báo giá cổ phiếu SHB trong 6 tháng tới",
+  "Phân tích tác động kinh tế vĩ mô đến ngành ngân hàng",
+  "Đánh giá các rủi ro và chiến lược phòng vệ khi đầu tư SHB",
+  "Tình hình nợ xấu và khả năng trích lập dự phòng của SHB",
+  "Tiềm năng từ mảng tài chính tiêu dùng SHB Finance",
+  "Chiến lược chuyển đổi số 2024-2028 của SHB có gì đặc biệt?",
+  "So sánh SHB với các ngân hàng Big4 và TMCP cùng phân khúc",
+];
+
 function ChatUI({
   messages,
   isConnected,
@@ -200,27 +212,85 @@ function ChatUI({
   onResumeDecisions,
 }: ChatUIProps) {
   return (
-    <div className="flex flex-col h-full max-w-4xl mx-auto w-full">
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-2 py-4 sm:px-4 sm:py-6 scrollbar-thin">
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-4">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-secondary flex items-center justify-center">
-              <Bot className="h-7 w-7 sm:h-8 sm:w-8" />
+    <div className="flex flex-col h-full max-w-4xl mx-auto w-full border-x border-border/40 bg-background/50 backdrop-blur-sm shadow-2xl">
+      {/* Header Banner */}
+      <div className="px-6 py-4 bg-gradient-to-r from-brand/10 via-brand/5 to-transparent border-b border-brand/10 flex items-center justify-between sticky top-0 z-20 backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-brand/10 shadow-inner">
+            <Sparkles className="h-5 w-5 text-brand" />
+          </div>
+          <div>
+            <h2 className="text-base font-black text-foreground tracking-tight">SHB Financial AI Pro</h2>
+            <div className="flex items-center gap-2">
+               <span className="text-[9px] px-1.5 py-0.5 rounded bg-brand/10 text-brand font-bold uppercase tracking-wider">Expert Mode</span>
+               <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Stock & Macro Analysis</p>
             </div>
-            <div className="text-center px-4">
-              <p className="text-base sm:text-lg font-medium text-foreground">AI Assistant</p>
-              <p className="text-sm">Start a conversation to get help</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-4 mr-4 text-muted-foreground">
+             <TrendingUp className="h-4 w-4 opacity-50" />
+             <BarChart3 className="h-4 w-4 opacity-50" />
+             <Globe2 className="h-4 w-4 opacity-50" />
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/80 border border-border/40 shadow-sm">
+            <span
+              className={`inline-block h-2 w-2 rounded-full ${isConnected ? "bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" : "bg-red-500"}`}
+            />
+            <span className="text-[10px] font-black text-muted-foreground uppercase">{isConnected ? "Online" : "Offline"}</span>
+          </div>
+        </div>
+      </div>
+
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-6 py-8 scrollbar-thin scroll-smooth">
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full gap-10 py-10">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-brand/30 blur-[80px] rounded-full group-hover:bg-brand/40 transition-colors duration-1000" />
+              <div className="relative w-28 h-24 rounded-[2.5rem] bg-card border-2 border-brand/20 shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex items-center justify-center transform hover:scale-105 hover:rotate-2 transition-all duration-500 cursor-pointer overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-transparent" />
+                <Bot className="h-14 w-14 text-brand relative z-10" />
+              </div>
+            </div>
+            
+            <div className="text-center max-w-lg space-y-4 px-6">
+              <h1 className="text-3xl font-black tracking-tighter text-foreground sm:text-4xl">
+                Xin chào Nhà đầu tư!
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed font-medium">
+                Tôi là Trợ lý AI thế hệ mới, được tối ưu riêng cho ngân hàng SHB. Tôi sẵn sàng hỗ trợ bạn phân tích mã, dự báo giá và quản trị rủi ro chuyên sâu.
+              </p>
+            </div>
+
+            <div className="w-full max-w-xl space-y-6">
+              <SuggestedQuestions
+                questions={SHB_SUGGESTIONS}
+                onSelect={(q) => sendMessage(q)}
+              />
             </div>
           </div>
         ) : (
-          <MessageList messages={messages} />
+          <div className="space-y-8 pb-10">
+            <MessageList messages={messages} />
+            <div className="pt-6 opacity-0 animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-forwards" style={{ animationDelay: '500ms' }}>
+               <div className="flex items-center gap-2 mb-4">
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-2">Gợi ý phân tích tiếp theo</span>
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
+               </div>
+               <SuggestedQuestions
+                  questions={SHB_SUGGESTIONS.slice(0, 4)}
+                  onSelect={(q) => sendMessage(q)}
+                />
+            </div>
+          </div>
         )}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-4" />
       </div>
 
       {/* Human-in-the-Loop: Tool Approval Dialog */}
       {pendingApproval && onResumeDecisions && (
-        <div className="px-2 pb-2 sm:px-4 sm:pb-2">
+        <div className="px-6 pb-2">
           <ToolApprovalDialog
             actionRequests={pendingApproval.actionRequests}
             reviewConfigs={pendingApproval.reviewConfigs}
@@ -230,26 +300,30 @@ function ChatUI({
         </div>
       )}
 
-      <div className="px-2 pb-2 sm:px-4 sm:pb-4">
-        <div className="rounded-xl border bg-card shadow-sm">
-          <div className="px-3 pt-3 sm:px-4 sm:pt-4">
+      <div className="px-6 pb-8">
+        <div className="rounded-[2rem] border-2 border-brand/10 bg-card/90 shadow-[0_10px_40px_rgba(0,0,0,0.1)] backdrop-blur-xl overflow-hidden transition-all duration-300 focus-within:border-brand/40 focus-within:shadow-[0_15px_50px_rgba(0,0,0,0.15)] group">
+          <div className="px-6 py-4">
             <ChatInput
               onSend={sendMessage}
               disabled={!isConnected || !!pendingApproval}
               isProcessing={isProcessing}
             />
           </div>
-          <div className="flex items-center justify-between px-3 pb-2 sm:px-4 sm:pb-3">
-            <div className="flex items-center gap-1">
-              <span
-                className={`inline-block h-1.5 w-1.5 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}
-              />
+          <div className="flex items-center justify-between px-6 py-3 border-t border-border/10 bg-muted/30">
+            <div className="flex items-center gap-2">
+               <ShieldAlert className="h-3 w-3 text-brand opacity-60" />
+               <p className="text-[10px] text-muted-foreground italic font-bold tracking-tight">AI model đang sẵn sàng phân tích chuyên sâu cho bạn</p>
             </div>
-            {onModelChange && (
-              <ModelSelector onChange={onModelChange} />
-            )}
+            <div className="flex items-center gap-4">
+              {onModelChange && (
+                <ModelSelector onChange={onModelChange} />
+              )}
+            </div>
           </div>
         </div>
+        <p className="text-[9px] text-center mt-3 text-muted-foreground/60 font-medium tracking-wide">
+          Dữ liệu phân tích chỉ mang tính chất tham khảo và hỗ trợ ra quyết định đầu tư.
+        </p>
       </div>
     </div>
   );

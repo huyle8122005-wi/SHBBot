@@ -129,7 +129,6 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
 
-
     # === AI Agent (pydantic_ai, openai/gemini) ===
     OPENAI_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
@@ -171,8 +170,7 @@ class Settings(BaseSettings):
         env = info.data.get("ENVIRONMENT", "local") if info.data else "local"
         if "*" in v and env == "production":
             raise ValueError(
-                "CORS_ORIGINS cannot contain '*' in production! "
-                "Specify explicit allowed origins."
+                "CORS_ORIGINS cannot contain '*' in production! Specify explicit allowed origins."
             )
         return v
 

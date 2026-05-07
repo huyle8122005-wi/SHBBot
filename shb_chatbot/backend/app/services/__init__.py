@@ -13,4 +13,4 @@ from app.services.conversation_share import ConversationShareService
 
 from app.services.file_upload import FileUploadService
 
-__all__ = ['UserService', 'ConversationService', 'ConversationShareService', 'FileUploadService']
+__all__ = ["UserService", "ConversationService", "ConversationShareService", "FileUploadService"]

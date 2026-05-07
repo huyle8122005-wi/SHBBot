@@ -7,6 +7,12 @@
       "skillPath": "skills/chrome-devtools/SKILL.md",
       "computedHash": "85d9c4ef94e00ddfc937d50aab72a307e80b98bc7e6744ec6e239ef68819c2d7"
     },
+    "financial-statements": {
+      "source": "anthropics/knowledge-work-plugins",
+      "sourceType": "github",
+      "skillPath": "finance/skills/financial-statements/SKILL.md",
+      "computedHash": "a1d47e9fe416526233ba65dc2d6794332aa7d14d9e3d2f9fc0832f40f96c152d"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",

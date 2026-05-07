@@ -1,4 +1,3 @@
-
 """User service (PostgreSQL async).
 
 Contains business logic for user operations. Uses UserRepository for database access.
@@ -77,7 +76,11 @@ class UserService:
             AuthenticationError: If credentials are invalid or user is inactive.
         """
         user = await user_repo.get_by_email(self.db, email)
-        if not user or not user.hashed_password or not verify_password(password, user.hashed_password):
+        if (
+            not user
+            or not user.hashed_password
+            or not verify_password(password, user.hashed_password)
+        ):
             raise AuthenticationError(message="Invalid email or password")
         if not user.is_active:
             raise AuthenticationError(message="User account is disabled")
@@ -97,7 +100,9 @@ class UserService:
 
         return await user_repo.update(self.db, db_user=user, update_data=update_data)
 
-    async def update_avatar(self, user_id: UUID, file_data: bytes, filename: str, content_type: str) -> User:
+    async def update_avatar(
+        self, user_id: UUID, file_data: bytes, filename: str, content_type: str
+    ) -> User:
         """Upload or replace avatar image.
 
         Raises:

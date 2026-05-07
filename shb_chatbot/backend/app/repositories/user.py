@@ -1,4 +1,3 @@
-
 """User repository (PostgreSQL async).
 
 Contains only database operations. Business logic (password hashing,

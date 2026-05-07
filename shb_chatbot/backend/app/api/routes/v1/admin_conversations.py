@@ -1,4 +1,3 @@
-
 """Admin conversation and user browsing routes.
 
 All endpoints require admin role.
@@ -16,8 +15,12 @@ from uuid import UUID
 from fastapi import APIRouter, Query
 
 from app.api.deps import ConversationSvc, CurrentAdmin
-from app.schemas.conversation import ConversationList, ConversationReadWithMessages
-from app.schemas.conversation_share import AdminConversationList, AdminConversationRead, AdminUserList
+from app.schemas.conversation import ConversationReadWithMessages
+from app.schemas.conversation_share import (
+    AdminConversationList,
+    AdminConversationRead,
+    AdminUserList,
+)
 
 router = APIRouter()
 
@@ -34,17 +37,21 @@ async def admin_list_conversations(
 ) -> Any:
     """List all conversations across all users (admin only)."""
     from sqlalchemy import func, select
+
     from app.db.models.conversation import Conversation, Message
     from app.db.models.user import User
 
     db = service.db
-    query = select(
-        Conversation,
-        func.count(Message.id).label("message_count"),
-        User.email.label("user_email"),
-    ).outerjoin(Message, Message.conversation_id == Conversation.id).outerjoin(
-        User, User.id == Conversation.user_id
-    ).group_by(Conversation.id, User.email)
+    query = (
+        select(
+            Conversation,
+            func.count(Message.id).label("message_count"),
+            User.email.label("user_email"),
+        )
+        .outerjoin(Message, Message.conversation_id == Conversation.id)
+        .outerjoin(User, User.id == Conversation.user_id)
+        .group_by(Conversation.id, User.email)
+    )
 
     if search:
         query = query.where(Conversation.title.ilike(f"%{search}%"))
@@ -93,20 +100,23 @@ async def admin_list_users(
 ) -> Any:
     """List all users with conversation counts (admin only)."""
     from sqlalchemy import func, select
+
     from app.db.models.conversation import Conversation
     from app.db.models.user import User
     from app.schemas.conversation_share import AdminUserRead
 
     db = service.db
-    query = select(
-        User,
-        func.count(Conversation.id).label("conversation_count"),
-    ).outerjoin(Conversation, Conversation.user_id == User.id).group_by(User.id)
+    query = (
+        select(
+            User,
+            func.count(Conversation.id).label("conversation_count"),
+        )
+        .outerjoin(Conversation, Conversation.user_id == User.id)
+        .group_by(User.id)
+    )
 
     if search:
-        query = query.where(
-            User.email.ilike(f"%{search}%") | User.full_name.ilike(f"%{search}%")
-        )
+        query = query.where(User.email.ilike(f"%{search}%") | User.full_name.ilike(f"%{search}%"))
 
     count_query = select(func.count()).select_from(User)
     if search:
@@ -140,4 +150,4 @@ async def admin_get_conversation(
     current_user: CurrentAdmin,
 ) -> Any:
     """Get any conversation with messages (admin read-only access)."""
-    return await service.get_conversation_with_messages(conversation_id)
+    return await service.get_conversation(conversation_id, include_messages=True)

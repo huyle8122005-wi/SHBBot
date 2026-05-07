@@ -12,10 +12,21 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 ALLOWED_MIME_TYPES = {
-    "image/jpeg", "image/png", "image/gif", "image/webp",
-    "text/plain", "text/markdown", "text/csv", "text/html", "text/css",
-    "text/xml", "text/x-python", "text/javascript", "text/x-yaml",
-    "application/json", "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "text/plain",
+    "text/markdown",
+    "text/csv",
+    "text/html",
+    "text/css",
+    "text/xml",
+    "text/x-python",
+    "text/javascript",
+    "text/x-yaml",
+    "application/json",
+    "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/x-yaml",
 }
@@ -97,5 +108,6 @@ class LocalFileStorage(BaseFileStorage):
 def get_file_storage() -> BaseFileStorage:
     """Factory: create file storage backend based on settings."""
     from app.core.config import settings
+
     media_dir = getattr(settings, "MEDIA_DIR", "media")
     return LocalFileStorage(base_dir=media_dir)

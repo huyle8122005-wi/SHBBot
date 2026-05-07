@@ -1,4 +1,3 @@
-
 """Chat file repository (PostgreSQL async).
 
 Contains database operations for ChatFile entities.

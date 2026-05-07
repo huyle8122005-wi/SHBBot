@@ -1,7 +1,6 @@
-
 """Tests for Celery worker tasks."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -24,8 +23,10 @@ class TestExampleTask:
         """Test example_task retries on error."""
         from app.worker.tasks.examples import example_task
 
-        with patch("app.worker.tasks.examples.time.sleep", side_effect=Exception("Test error")), \
-             patch.object(example_task, "retry", side_effect=Exception("Retry")) as mock_retry:
+        with (
+            patch("app.worker.tasks.examples.time.sleep", side_effect=Exception("Test error")),
+            patch.object(example_task, "retry", side_effect=Exception("Retry")) as mock_retry,
+        ):
             with pytest.raises(Exception, match="Retry"):
                 example_task.run("test message")
             mock_retry.assert_called_once()
@@ -38,8 +39,10 @@ class TestLongRunningTask:
         """Test long_running_task completes with progress."""
         from app.worker.tasks.examples import long_running_task
 
-        with patch("app.worker.tasks.examples.time.sleep"), \
-             patch.object(long_running_task, "update_state") as mock_update:
+        with (
+            patch("app.worker.tasks.examples.time.sleep"),
+            patch.object(long_running_task, "update_state") as mock_update,
+        ):
             result = long_running_task.run(duration=3)
 
         assert result["status"] == "completed"

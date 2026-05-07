@@ -1,4 +1,5 @@
 """Database models."""
+
 # ruff: noqa: I001, RUF022 - Imports structured for Jinja2 template conditionals
 from app.db.models.user import User
 from app.db.models.conversation import Conversation, Message, ToolCall
@@ -6,4 +7,12 @@ from app.db.models.chat_file import ChatFile
 from app.db.models.message_rating import MessageRating
 from app.db.models.conversation_share import ConversationShare
 
-__all__ = ['User', 'Conversation', 'Message', 'ToolCall', 'ChatFile', 'MessageRating', 'ConversationShare']
+__all__ = [
+    "User",
+    "Conversation",
+    "Message",
+    "ToolCall",
+    "ChatFile",
+    "MessageRating",
+    "ConversationShare",
+]

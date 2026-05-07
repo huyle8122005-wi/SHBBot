@@ -132,9 +132,9 @@ async def readiness_probe(
         }
 
     # Determine overall health
-    all_healthy = all(
-        check.get("status") == "healthy" for check in checks.values()
-    ) if checks else True
+    all_healthy = (
+        all(check.get("status") == "healthy" for check in checks.values()) if checks else True
+    )
 
     response_data = _build_health_response(
         status="ready" if all_healthy else "not_ready",

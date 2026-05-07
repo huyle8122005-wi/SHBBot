@@ -1,14 +1,10 @@
-
 """AI Agent WebSocket routes with streaming support (PydanticAI)."""
 
 import logging
 from typing import Any
-from sqlalchemy import select
-from datetime import datetime, UTC
 from uuid import UUID
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
-
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from pydantic_ai import (
     Agent,
     FinalResultEvent,
@@ -26,13 +22,19 @@ from pydantic_ai.messages import (
     TextPart,
     UserPromptPart,
 )
+from sqlalchemy import select
 
 from app.agents.assistant import Deps, get_agent
-from app.api.deps import get_current_user_ws_optional
+from app.api.deps import get_conversation_service, get_current_user_ws_optional
 from app.db.models.user import User
 from app.db.session import get_db_context
-from app.api.deps import ConversationSvc, get_conversation_service
-from app.schemas.conversation import ConversationCreate, ConversationUpdate, MessageCreate, ToolCallCreate, ToolCallComplete
+from app.schemas.conversation import (
+    ConversationCreate,
+    ConversationUpdate,
+    MessageCreate,
+    ToolCallComplete,
+    ToolCallCreate,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +45,7 @@ router = APIRouter()
 async def list_models() -> dict[str, Any]:
     """Return available LLM models and the current default."""
     from app.core.config import settings
+
     return {
         "default": settings.AI_MODEL,
         "models": settings.AI_AVAILABLE_MODELS,
@@ -67,7 +70,9 @@ class AgentConnectionManager:
         """Remove a WebSocket connection."""
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
-        logger.info(f"Agent WebSocket disconnected. Total connections: {len(self.active_connections)}")
+        logger.info(
+            f"Agent WebSocket disconnected. Total connections: {len(self.active_connections)}"
+        )
 
     async def send_event(self, websocket: WebSocket, event_type: str, data: Any) -> bool:
         """Send a JSON event to a specific WebSocket client.
@@ -163,10 +168,18 @@ async def agent_websocket(
                         if requested_conv_id:
                             current_conversation_id = requested_conv_id
                             # Verify conversation exists and update title if empty
-                            conv = await conv_service.get_conversation(UUID(requested_conv_id), user_id=user.id)
+                            conv = await conv_service.get_conversation(
+                                UUID(requested_conv_id), user_id=user.id
+                            )
                             if not conv.title and user_message:
-                                title = user_message[:50] if len(user_message) > 50 else user_message
-                                await conv_service.update_conversation(UUID(requested_conv_id), ConversationUpdate(title=title), user_id=user.id)
+                                title = (
+                                    user_message[:50] if len(user_message) > 50 else user_message
+                                )
+                                await conv_service.update_conversation(
+                                    UUID(requested_conv_id),
+                                    ConversationUpdate(title=title),
+                                    user_id=user.id,
+                                )
                         elif not current_conversation_id:
                             # Create new conversation
                             conv_data = ConversationCreate(
@@ -199,6 +212,7 @@ async def agent_websocket(
                 # Guest mode: assign a temporary conversation ID if none exists
                 if not current_conversation_id:
                     from uuid import uuid4
+
                     current_conversation_id = str(uuid4())
                     await manager.send_event(
                         websocket,
@@ -217,6 +231,7 @@ async def agent_websocket(
                 collected_tool_calls: list[dict[str, Any]] = []
                 # Load attached files and build multimodal input
                 from pydantic_ai.messages import BinaryContent
+
                 from app.db.models.chat_file import ChatFile as ChatFileModel
                 from app.services.file_storage import get_file_storage
 
@@ -229,15 +244,23 @@ async def agent_websocket(
                     async with get_db_context() as file_db:
                         for fid in file_ids:
                             try:
-                                result = await file_db.execute(select(ChatFileModel).where(ChatFileModel.id == UUID(fid)))
+                                result = await file_db.execute(
+                                    select(ChatFileModel).where(ChatFileModel.id == UUID(fid))
+                                )
                                 chat_file = result.scalar_one_or_none()
                                 if not chat_file:
                                     continue
                                 if chat_file.file_type == "image":
                                     file_data = await storage.load(chat_file.storage_path)
-                                    image_parts.append(BinaryContent(data=file_data, media_type=chat_file.mime_type))
+                                    image_parts.append(
+                                        BinaryContent(
+                                            data=file_data, media_type=chat_file.mime_type
+                                        )
+                                    )
                                 elif chat_file.parsed_content:
-                                    file_context_parts.append(f"\n---\nAttached file: {chat_file.filename}\n```\n{chat_file.parsed_content}\n```")
+                                    file_context_parts.append(
+                                        f"\n---\nAttached file: {chat_file.filename}\n```\n{chat_file.parsed_content}\n```"
+                                    )
                             except Exception as e:
                                 logger.warning(f"Failed to load file {fid}: {e}")
 
@@ -255,7 +278,11 @@ async def agent_websocket(
                 ) as agent_run:
                     async for node in agent_run:
                         if Agent.is_user_prompt_node(node):
-                            prompt_text = node.user_prompt if isinstance(node.user_prompt, str) else user_message
+                            prompt_text = (
+                                node.user_prompt
+                                if isinstance(node.user_prompt, str)
+                                else user_message
+                            )
                             await manager.send_event(
                                 websocket,
                                 "user_prompt_processed",
@@ -320,11 +347,13 @@ async def agent_websocket(
                             async with node.stream(agent_run.ctx) as handle_stream:
                                 async for tool_event in handle_stream:
                                     if isinstance(tool_event, FunctionToolCallEvent):
-                                        collected_tool_calls.append({
-                                            "tool_call_id": tool_event.part.tool_call_id,
-                                            "tool_name": tool_event.part.tool_name,
-                                            "args": tool_event.part.args,
-                                        })
+                                        collected_tool_calls.append(
+                                            {
+                                                "tool_call_id": tool_event.part.tool_call_id,
+                                                "tool_name": tool_event.part.tool_name,
+                                                "args": tool_event.part.args,
+                                            }
+                                        )
                                         await manager.send_event(
                                             websocket,
                                             "tool_call",
@@ -374,26 +403,43 @@ async def agent_websocket(
                                 MessageCreate(
                                     role="assistant",
                                     content=agent_run.result.output,
-                                    model_name=assistant.model_name if hasattr(assistant, "model_name") else None,
+                                    model_name=assistant.model_name
+                                    if hasattr(assistant, "model_name")
+                                    else None,
                                 ),
                             )
                             assistant_msg_id = str(assistant_msg.id)
                             # Save tool calls
-                            from datetime import datetime, UTC
                             import json
+                            from datetime import UTC, datetime
+
                             for tc in collected_tool_calls:
                                 try:
                                     args_dict = tc.get("args", {})
                                     if isinstance(args_dict, str):
-                                        args_dict = json.loads(args_dict) if args_dict.strip() else {}
+                                        args_dict = (
+                                            json.loads(args_dict) if args_dict.strip() else {}
+                                        )
                                     if args_dict is None:
                                         args_dict = {}
                                     tc_obj = await conv_service.start_tool_call(
                                         assistant_msg.id,
-                                        ToolCallCreate(tool_call_id=tc["tool_call_id"], tool_name=tc["tool_name"], args=args_dict, started_at=datetime.now(UTC)),
+                                        ToolCallCreate(
+                                            tool_call_id=tc["tool_call_id"],
+                                            tool_name=tc["tool_name"],
+                                            args=args_dict,
+                                            started_at=datetime.now(UTC),
+                                        ),
                                     )
                                     if tc.get("result"):
-                                        await conv_service.complete_tool_call(tc_obj.id, ToolCallComplete(result=tc["result"], completed_at=datetime.now(UTC), success=True))
+                                        await conv_service.complete_tool_call(
+                                            tc_obj.id,
+                                            ToolCallComplete(
+                                                result=tc["result"],
+                                                completed_at=datetime.now(UTC),
+                                                success=True,
+                                            ),
+                                        )
                                 except Exception as e:
                                     logger.warning(f"Failed to persist tool call: {e}")
                     except Exception as e:
@@ -401,14 +447,22 @@ async def agent_websocket(
 
                 # Notify frontend that assistant message was saved with real database ID
                 if assistant_msg_id:
-                    await manager.send_event(websocket, "message_saved", {
-                        "message_id": assistant_msg_id,
-                        "conversation_id": current_conversation_id,
-                    })
+                    await manager.send_event(
+                        websocket,
+                        "message_saved",
+                        {
+                            "message_id": assistant_msg_id,
+                            "conversation_id": current_conversation_id,
+                        },
+                    )
 
-                await manager.send_event(websocket, "complete", {
-                    "conversation_id": current_conversation_id,
-                })
+                await manager.send_event(
+                    websocket,
+                    "complete",
+                    {
+                        "conversation_id": current_conversation_id,
+                    },
+                )
 
             except WebSocketDisconnect:
                 # Client disconnected during processing - this is normal

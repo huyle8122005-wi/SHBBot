@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 class FileUploadResponse(BaseModel):
     """Response after successful file upload."""
+
     id: UUID
     filename: str
     mime_type: str

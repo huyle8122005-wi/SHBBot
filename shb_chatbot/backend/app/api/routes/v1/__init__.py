@@ -35,4 +35,6 @@ v1_router.include_router(agent.router, tags=["agent"])
 v1_router.include_router(files.router, tags=["files"])
 
 # Admin: conversation browser + user listing
-v1_router.include_router(admin_conversations.router, prefix="/admin/conversations", tags=["admin-conversations"])
+v1_router.include_router(
+    admin_conversations.router, prefix="/admin/conversations", tags=["admin-conversations"]
+)

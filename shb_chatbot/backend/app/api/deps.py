@@ -2,7 +2,7 @@
 
 Dependency injection factories for services, repositories, and authentication.
 """
-# ruff: noqa: I001, E402 - Imports structured for Jinja2 template conditionals
+# ruff: noqa: I001 - Imports structured for Jinja2 template conditionals
 
 from typing import Annotated
 
@@ -49,6 +49,8 @@ def get_conversation_service(db: DBSession) -> ConversationService:
 ConversationSvc = Annotated[ConversationService, Depends(get_conversation_service)]
 
 from app.services.conversation_share import ConversationShareService
+
+
 def get_conversation_share_service(db: DBSession) -> ConversationShareService:
     """Create ConversationShareService instance with database session."""
     return ConversationShareService(db)
@@ -81,6 +83,8 @@ from app.core.exceptions import AuthenticationError, AuthorizationError
 from app.db.models.user import User, UserRole
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
+
+
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     user_service: UserSvc,
@@ -191,7 +195,7 @@ def _extract_ws_auth(websocket: WebSocket) -> tuple[str | None, str | None]:
     app_subprotocol: str | None = None
     for proto in (p.strip() for p in raw.split(",") if p.strip()):
         if proto.startswith(_WS_TOKEN_PROTOCOL_PREFIX):
-            token = proto[len(_WS_TOKEN_PROTOCOL_PREFIX):]
+            token = proto[len(_WS_TOKEN_PROTOCOL_PREFIX) :]
         elif app_subprotocol is None:
             app_subprotocol = proto
     return token, app_subprotocol
@@ -308,7 +312,6 @@ import secrets
 
 from fastapi.security import APIKeyHeader
 
-from app.core.exceptions import AuthenticationError, AuthorizationError
 
 api_key_header = APIKeyHeader(name=settings.API_KEY_HEADER, auto_error=False)
 

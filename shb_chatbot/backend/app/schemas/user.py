@@ -1,4 +1,3 @@
-
 """User schemas."""
 
 from enum import StrEnum
@@ -45,6 +44,7 @@ class UserUpdate(BaseSchema):
 
 class UserRead(UserBase, TimestampSchema):
     """Schema for reading a user."""
+
     id: UUID
     role: UserRole = UserRole.USER
     avatar_url: str | None = None

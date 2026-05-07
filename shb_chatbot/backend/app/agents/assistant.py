@@ -1,4 +1,3 @@
-
 """Assistant agent with PydanticAI.
 
 The main conversational agent that can be extended with custom tools.
@@ -17,13 +16,21 @@ from pydantic_ai.messages import (
     TextPart,
     UserPromptPart,
 )
-from pydantic_ai.models.gemini import GeminiModel
+from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.models.openai import OpenAIResponsesModel
+from pydantic_ai.providers.google import GoogleProvider
 from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic_ai.settings import ModelSettings
 
 from app.agents.prompts import DEFAULT_SYSTEM_PROMPT
-from app.agents.tools import get_current_datetime
+from app.agents.tools import (
+    analyze_macro_economy,
+    analyze_shb_risks,
+    analyze_shb_stock,
+    analyze_shb_stock_deep,
+    forecast_shb_price,
+    get_current_datetime,
+)
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -61,23 +68,36 @@ class AssistantAgent:
     def _create_agent(self) -> Agent[Deps, str]:
         """Create and configure the PydanticAI agent."""
         # Force Gemini if OpenAI key is missing but Gemini key is present
-        if "gemini" in self.model_name.lower() or (not settings.OPENAI_API_KEY and settings.GEMINI_API_KEY):
-            actual_model = self.model_name if "gemini" in self.model_name.lower() else settings.AI_MODEL
-            model = GeminiModel(actual_model)
+        is_google = "gemini" in self.model_name.lower() or (
+            not settings.OPENAI_API_KEY and settings.GEMINI_API_KEY
+        )
+
+        if is_google:
+            actual_model = (
+                self.model_name if "gemini" in self.model_name.lower() else settings.AI_MODEL
+            )
+            model = GoogleModel(
+                actual_model, provider=GoogleProvider(api_key=settings.GEMINI_API_KEY)
+            )
         else:
             model = OpenAIResponsesModel(
                 self.model_name,
                 provider=OpenAIProvider(api_key=settings.OPENAI_API_KEY),
             )
 
+        # Google does not support mixing built-in tools (capabilities) and function tools
+        capabilities: list[Any] = []
+        if not is_google:
+            capabilities = [
+                WebSearch(),
+                WebFetch(),
+            ]
+
         agent = Agent[Deps, str](
             model=model,
             model_settings=ModelSettings(temperature=self.temperature),
             system_prompt=self.system_prompt,
-            capabilities=[
-                WebSearch(),
-                WebFetch(),
-            ],
+            capabilities=capabilities,
         )
 
         self._register_tools(agent)
@@ -94,6 +114,46 @@ class AssistantAgent:
             Use this tool when you need to know the current date or time.
             """
             return get_current_datetime()
+
+        @agent.tool
+        async def shb_stock_analysis(ctx: RunContext[Deps]) -> dict[str, Any]:
+            """Analyze SHB stock (Ngân hàng TMCP Sài Gòn - Hà Nội).
+
+            Use this tool when the user asks about SHB stock price, technical analysis, or market sentiment.
+            """
+            return analyze_shb_stock()
+
+        @agent.tool
+        async def shb_deep_analysis(ctx: RunContext[Deps]) -> dict[str, Any]:
+            """Provide deep financial analysis for SHB investment.
+
+            Use this tool for complex questions about SHB's valuation, growth drivers, competitive advantages, or long-term investment potential.
+            """
+            return analyze_shb_stock_deep()
+
+        @agent.tool
+        async def macro_economic_analysis(ctx: RunContext[Deps]) -> dict[str, Any]:
+            """Analyze the macro-economic environment in Vietnam.
+
+            Use this tool to provide context on how the overall economy affects the banking sector and SHB.
+            """
+            return analyze_macro_economy()
+
+        @agent.tool
+        async def shb_price_forecast(ctx: RunContext[Deps]) -> dict[str, Any]:
+            """Provide price forecasting for SHB stock.
+
+            Use this tool when users ask for price targets or future projections for SHB stock.
+            """
+            return forecast_shb_price()
+
+        @agent.tool
+        async def shb_risk_assessment(ctx: RunContext[Deps]) -> dict[str, Any]:
+            """Analyze potential investment risks for SHB.
+
+            Use this tool to provide a balanced view of the risks and mitigation strategies for investing in SHB.
+            """
+            return analyze_shb_risks()
 
     @property
     def agent(self) -> Agent[Deps, str]:

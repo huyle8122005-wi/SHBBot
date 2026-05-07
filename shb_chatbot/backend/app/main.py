@@ -12,15 +12,16 @@ from fastapi_pagination import add_pagination
 
 from app.api.exception_handlers import register_exception_handlers
 from app.api.router import api_router
+from app.clients.redis import RedisClient
 from app.core.config import settings
 from app.core.logfire_setup import instrument_app, setup_logfire
 from app.core.logging import setup_logging
 from app.core.middleware import RequestIDMiddleware
-from app.clients.redis import RedisClient
 
 
 class LifespanState(TypedDict, total=False):
     """Lifespan state - resources available via request.state."""
+
     redis: RedisClient
 
 
@@ -35,8 +36,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[LifespanState, None]:
     state: LifespanState = {}
     setup_logfire()
     from app.core.logfire_setup import instrument_asyncpg
+
     instrument_asyncpg()
     from app.core.logfire_setup import instrument_pydantic_ai
+
     instrument_pydantic_ai()
     redis_client = RedisClient()
     await redis_client.connect()
@@ -47,6 +50,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[LifespanState, None]:
     if "redis" in state:
         await state["redis"].close()
     from app.db.session import close_db
+
     await close_db()
 
 
@@ -138,6 +142,7 @@ A FastAPI project
 
     # CORS middleware
     from starlette.middleware.cors import CORSMiddleware
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,

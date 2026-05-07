@@ -1,4 +1,3 @@
-
 """Authentication routes."""
 
 from typing import Annotated, Any
@@ -11,7 +10,7 @@ from app.api.deps import CurrentUser, UserSvc
 from app.core.exceptions import AuthenticationError
 from app.core.security import create_access_token, create_refresh_token, verify_token
 from app.schemas.token import RefreshTokenRequest, Token
-from app.schemas.user import UserCreate, UserRead, UserRole
+from app.schemas.user import UserCreate, UserRead
 
 router = APIRouter()
 

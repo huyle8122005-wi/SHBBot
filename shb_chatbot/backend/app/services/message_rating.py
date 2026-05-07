@@ -1,6 +1,6 @@
 """Message rating service - business logic for ratings."""
-from collections.abc import AsyncGenerator
 
+from collections.abc import AsyncGenerator
 from uuid import UUID
 
 from sqlalchemy import select
@@ -36,7 +36,9 @@ class MessageRatingService:
         result = await self.db.execute(query)
         role = result.scalar_one_or_none()
         if not role:
-            raise NotFoundError(message="Message not found", details={"message_id": str(message_id)})
+            raise NotFoundError(
+                message="Message not found", details={"message_id": str(message_id)}
+            )
         return role
 
     async def _validate_message_in_conversation(
@@ -51,16 +53,16 @@ class MessageRatingService:
         result = await self.db.execute(query)
         message_conv_id = result.scalar_one_or_none()
         if not message_conv_id:
-            raise NotFoundError(message="Message not found", details={"message_id": str(message_id)})
+            raise NotFoundError(
+                message="Message not found", details={"message_id": str(message_id)}
+            )
         if message_conv_id != conversation_id:
             raise NotFoundError(
                 message="Message not found in this conversation",
                 details={"message_id": str(message_id), "conversation_id": str(conversation_id)},
             )
 
-    async def _validate_conversation_ownership(
-        self, conversation_id: UUID, user_id: UUID
-    ) -> None:
+    async def _validate_conversation_ownership(self, conversation_id: UUID, user_id: UUID) -> None:
         """Validate that the conversation belongs to the specified user.
 
         Raises:
@@ -107,9 +109,7 @@ class MessageRatingService:
             )
 
         # Check for existing rating
-        existing = await rating_repo.get_rating_by_message_and_user(
-            self.db, message_id, user_id
-        )
+        existing = await rating_repo.get_rating_by_message_and_user(self.db, message_id, user_id)
 
         if existing:
             # Update existing rating
@@ -162,9 +162,7 @@ class MessageRatingService:
         await self._validate_conversation_ownership(conversation_id, user_id)
         await self._validate_message_in_conversation(message_id, conversation_id)
 
-        rating = await rating_repo.get_rating_by_message_and_user(
-            self.db, message_id, user_id
-        )
+        rating = await rating_repo.get_rating_by_message_and_user(self.db, message_id, user_id)
         if not rating:
             raise NotFoundError(
                 message="Rating not found",

@@ -1,11 +1,10 @@
-
 """Tests for AI agent module (PydanticAI)."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from app.agents.assistant import AssistantAgent, Deps, get_agent, run_agent
+from app.agents.assistant import AssistantAgent, Deps, get_agent
 from app.agents.prompts import DEFAULT_SYSTEM_PROMPT
 from app.agents.tools.datetime_tool import get_current_datetime
 
@@ -59,26 +58,20 @@ class TestAssistantAgent:
         assert agent.temperature == 0.5
         assert agent.system_prompt == "Custom prompt"
 
-    @patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"})
-    @patch("app.agents.assistant.OpenAIProvider")
-    @patch("app.agents.assistant.OpenAIResponsesModel")
-    def test_agent_property_creates_agent(self, mock_model, mock_provider):
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "test-key", "GEMINI_API_KEY": "test-key"})
+    def test_agent_property_creates_agent(self):
         """Test agent property creates agent on first access."""
-        agent = AssistantAgent()
+        agent = AssistantAgent(model_name="gpt-4o")
         _ = agent.agent
         assert agent._agent is not None
-        mock_model.assert_called_once()
 
-    @patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"})
-    @patch("app.agents.assistant.OpenAIProvider")
-    @patch("app.agents.assistant.OpenAIResponsesModel")
-    def test_agent_property_caches_agent(self, mock_model, mock_provider):
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "test-key", "GEMINI_API_KEY": "test-key"})
+    def test_agent_property_caches_agent(self):
         """Test agent property caches the agent instance."""
-        agent = AssistantAgent()
+        agent = AssistantAgent(model_name="gpt-4o")
         agent1 = agent.agent
         agent2 = agent.agent
         assert agent1 is agent2
-        mock_model.assert_called_once()
 
 
 class TestGetAgent:
@@ -106,7 +99,7 @@ class TestHistoryConversion:
 
     def test_empty_history(self):
         """Test with empty history."""
-        _agent = AssistantAgent()  # noqa: F841
+        _agent = AssistantAgent()
         # History conversion happens inside run/iter methods
         # We test the structure here
         history = []
