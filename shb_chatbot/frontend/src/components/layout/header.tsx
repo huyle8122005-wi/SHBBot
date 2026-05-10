@@ -33,7 +33,7 @@ export function Header() {
             <span className="sr-only">Toggle menu</span>
           </Button>
 
-          <Link href={ROUTES.DASHBOARD} className="text-sm font-bold tracking-tight sm:text-base">
+          <Link href={ROUTES.HOME} className="text-sm font-bold tracking-tight sm:text-base">
             {APP_NAME}
           </Link>
 

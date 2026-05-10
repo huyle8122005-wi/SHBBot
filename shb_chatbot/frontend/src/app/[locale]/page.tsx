@@ -173,6 +173,19 @@ export default async function HomePage() {
                   <li><Link href={ROUTES.LOGIN} className="text-sm text-muted-foreground transition-colors hover:text-foreground">{t("signIn")}</Link></li>
                 </ul>
               </div>
+              <div>
+                <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {t("footerContact")}
+                </h4>
+                <ul className="space-y-2">
+                  <li className="text-sm text-muted-foreground">
+                    Gmail: <a href="mailto:huyle8122005@gmail.com" className="hover:text-foreground">huyle8122005@gmail.com</a>
+                  </li>
+                  <li className="text-sm text-muted-foreground">
+                    {t("phone")}: <a href="tel:+84399870380" className="hover:text-foreground">+84 399 870 380</a>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>

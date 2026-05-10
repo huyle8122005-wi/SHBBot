@@ -15,10 +15,6 @@ services:
     container_name: shb_chatbot_frontend
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/.next
-      - /app/node_modules
     environment:
       - NODE_ENV=development
       - BACKEND_URL=http://host.docker.internal:8000
