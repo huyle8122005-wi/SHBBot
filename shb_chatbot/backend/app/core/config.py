@@ -179,16 +179,18 @@ class Settings(BaseSettings):
     CORS_ALLOW_METHODS: list[str] = ["*"]
     CORS_ALLOW_HEADERS: list[str] = ["*"]
 
-    @field_validator("CORS_ORIGINS")
+    @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
-    def validate_cors_origins(cls, v: list[str], info: ValidationInfo) -> list[str]:
-        """Warn if CORS_ORIGINS is too permissive in production."""
-        env = info.data.get("ENVIRONMENT", "local") if info.data else "local"
-        if "*" in v and env == "production":
-            raise ValueError(
-                "CORS_ORIGINS cannot contain '*' in production! Specify explicit allowed origins."
-            )
-        return v
+    def assemble_cors_origins(cls, v: str | list[str]) -> list[str]:
+        """Assemble CORS origins from string or list."""
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, (list, str)):
+            import json
+            if isinstance(v, str):
+                v = json.loads(v)
+            return v  # type: ignore[return-value]
+        raise ValueError(v)
 
 
 settings = Settings()

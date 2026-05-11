@@ -33,7 +33,10 @@ export async function backendFetch<T>(
 ): Promise<T> {
   const { params, body, raw, ...fetchOptions } = options;
 
-  let url = `${BACKEND_URL}${endpoint}`;
+  // Remove trailing slash from BACKEND_URL if present, and leading slash from endpoint
+  const baseUrl = BACKEND_URL.endsWith("/") ? BACKEND_URL.slice(0, -1) : BACKEND_URL;
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  let url = `${baseUrl}${cleanEndpoint}`;
 
   if (params) {
     const searchParams = new URLSearchParams(params);
@@ -55,6 +58,9 @@ export async function backendFetch<T>(
       ...fetchOptions.headers,
     },
     body,
+  }).catch(err => {
+    console.error(`Fetch failed for ${url}:`, err);
+    throw err;
   });
 
   if (!response.ok) {
@@ -64,6 +70,7 @@ export async function backendFetch<T>(
     } catch {
       errorData = null;
     }
+    console.error(`Backend error ${response.status} at ${url}:`, errorData);
     throw new BackendApiError(response.status, response.statusText, errorData);
   }
 
