@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { buttonVariants } from "@/components/ui";
+
+export const runtime = 'edge';
+
 import { LandingNav } from "@/components/layout/landing-nav";
 import { ROUTES } from "@/lib/constants";
 import { cn } from "@/lib/utils";

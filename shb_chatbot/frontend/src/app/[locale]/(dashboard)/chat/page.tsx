@@ -1,5 +1,7 @@
 "use client";
 
+export const runtime = 'edge';
+
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChatContainer, ConversationSidebar } from "@/components/chat";

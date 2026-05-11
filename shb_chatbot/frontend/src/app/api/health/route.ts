@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { backendFetch, BackendApiError } from "@/lib/server-api";
 import type { HealthResponse } from "@/types";
 
+export const runtime = 'edge';
+
 export async function GET() {
   try {
     const data = await backendFetch<HealthResponse>("/api/v1/health");

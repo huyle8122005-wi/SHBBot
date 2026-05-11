@@ -1,5 +1,7 @@
 "use client";
 
+export const runtime = 'edge';
+
 import { Card, Badge } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme";
 import { Server, Code, Shield, Palette } from "lucide-react";

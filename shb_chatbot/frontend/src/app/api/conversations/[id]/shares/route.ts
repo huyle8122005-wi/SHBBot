@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { backendFetch, BackendApiError } from "@/lib/server-api";
 
+export const runtime = 'edge';
+
 interface RouteParams {
   params: Promise<{ id: string }>;
 }

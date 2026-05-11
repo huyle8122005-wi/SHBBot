@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { backendFetch, BackendApiError } from "@/lib/server-api";
 import type { RefreshTokenResponse } from "@/types";
 
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     const refreshToken = request.cookies.get("refresh_token")?.value;

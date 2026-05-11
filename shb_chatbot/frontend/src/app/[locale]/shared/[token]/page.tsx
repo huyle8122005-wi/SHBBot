@@ -2,6 +2,8 @@
 
 import { MessageSquare } from "lucide-react";
 
+export const runtime = 'edge';
+
 interface SharedConversationPageProps {
   params: Promise<{ token: string; locale: string }>;
 }

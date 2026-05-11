@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { backendFetch, BackendApiError } from "@/lib/server-api";
 
+export const runtime = 'edge';
+
 export async function GET(request: NextRequest) {
   try {
     const accessToken = request.cookies.get("access_token")?.value;
