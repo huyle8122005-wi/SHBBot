@@ -48,13 +48,21 @@ class Settings(BaseSettings):
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = "shb_chatbot"
+    
+    _DATABASE_URL: str | None = None
+    _DATABASE_URL_SYNC: str | None = None
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def DATABASE_URL(self) -> str:
         """Build async PostgreSQL connection URL."""
+        if self._DATABASE_URL:
+            return self._DATABASE_URL
+            
+        from urllib.parse import quote_plus
+        encoded_password = quote_plus(self.POSTGRES_PASSWORD)
         return (
-            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"postgresql+asyncpg://{self.POSTGRES_USER}:{encoded_password}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
 
@@ -62,8 +70,13 @@ class Settings(BaseSettings):
     @property
     def DATABASE_URL_SYNC(self) -> str:
         """Build sync PostgreSQL connection URL (for Alembic)."""
+        if self._DATABASE_URL_SYNC:
+            return self._DATABASE_URL_SYNC
+            
+        from urllib.parse import quote_plus
+        encoded_password = quote_plus(self.POSTGRES_PASSWORD)
         return (
-            f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"postgresql://{self.POSTGRES_USER}:{encoded_password}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
 
