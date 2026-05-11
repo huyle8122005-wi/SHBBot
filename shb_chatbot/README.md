@@ -1,157 +1,93 @@
-# shb_chatbot
+# SHB AI Financial Assistant 🚀
 
-A FastAPI project
+Trợ lý AI chuyên gia về phân tích cổ phiếu SHB (Ngân hàng TMCP Sài Gòn - Hà Nội). Hệ thống kết hợp sức mạnh của **Gemini 2.5 Flash** cùng dữ liệu thị trường thực tế và báo cáo phân tích chuyên sâu.
 
-Generated with [Full-Stack AI Agent Template](https://github.com/vstorm-co/full-stack-ai-agent-template).
+## ✨ Tính năng nổi bật
 
-## Stack
+- **🔍 PDF Deep Search:** Tự động tra cứu và trích dẫn thông tin từ các báo cáo phân tích tổ chức (Institutional Reports).
+- **📈 Real-time Market Data:** Tích hợp **VNStock 4.0** để cập nhật giá chứng khoán, khối lượng giao dịch và chỉ số tài chính mới nhất.
+- **🧠 Expert Reasoning:** Hệ thống Prompt chuyên gia giúp AI phối hợp dữ liệu tĩnh (PDF) và dữ liệu động (VNStock) để đưa ra nhận định khách quan.
+- **💼 Admin Dashboard:** Quản lý hội thoại, theo dõi đánh giá người dùng (Ratings) và hiệu suất của AI.
+- **⚡ Background Processing:** Sử dụng Celery & Redis để xử lý các tác vụ phân tích nặng và gửi thông báo.
 
-| Component | Technology |
+## 🛠️ Công nghệ sử dụng
+
+| Thành phần | Công nghệ |
 |-----------|-----------|
-| **Backend** | FastAPI + Pydantic v2 |
-| **Database** | PostgreSQL (async) |
-| **Auth** | JWT + API Key + refresh tokens |
-| **Cache** | Redis |
-| **AI Framework** | pydantic_ai (openai) |
-| **Tasks** | celery |
-| **Frontend** | Next.js 15 + React 19 + Tailwind v4 |
+| **AI Brain** | Gemini 2.5 Flash (Google) |
+| **Framework AI** | PydanticAI |
+| **Backend** | FastAPI + Pydantic v2 + SQLAlchemy (Async) |
+| **Frontend** | Next.js 15 + React 19 + Tailwind CSS |
+| **Database** | PostgreSQL (Supabase) |
+| **Real-time Data**| VNStock API v4 |
+| **Cache & Task** | Redis + Celery |
 
-## Quick Start
+## 🚀 Cài đặt nhanh (Local)
 
-```bash
-# Install dependencies
-make install
-# One-command setup (Docker required)
-make quickstart
-```
-This will:
-1. Install Python dependencies
-2. Start all Docker services (database, Redis, vector store, etc.)
-3. Run database migrations
-4. Create an admin user (`admin@example.com` / `admin123`)
-
-**Access:**
-- API: http://localhost:8000
-- Docs: http://localhost:8000/docs
-- Admin: http://localhost:8000/admin
-- Frontend: http://localhost:3000 (run `cd frontend && bun dev`)
-
-## Manual Setup
-
-If you prefer to set up step by step:
+### 1. Chuẩn bị môi trường
+Yêu cầu: Docker, Python 3.12+, Node.js 20+.
 
 ```bash
-# 1. Install dependencies
-make install
-# 2. Start database
-make docker-db
-# 3. Create and apply migrations
-make db-migrate    # Enter: "Initial migration"
-make db-upgrade
-
-# 4. Create admin user
-make create-admin
-
-# 5. Start backend
-make run
-# 6. Start frontend (new terminal)
-cd frontend && bun install && bun dev
+# Clone dự án
+git clone https://github.com/username/shb-chatbot.git
+cd shb-chatbot
 ```
 
-## Commands
-
-Run `make help` for all available commands. Key ones:
-
-| Command | Description |
-|---------|-------------|
-| `make run` | Start dev server with hot reload |
-| `make test` | Run tests |
-| `make lint` | Check code quality |
-| `make format` | Auto-format code |
-| `make db-migrate` | Create new migration |
-| `make db-upgrade` | Apply migrations |
-| `make create-admin` | Create admin user |
-| `make quickstart` | Full setup (install + docker + db + admin) |
-| `make docker-up` | Start all Docker services |
-| `make docker-down` | Stop all services |
-
-
-## AI Agent
-
-Using **pydantic_ai** with **openai** provider.
-Chat with the agent at http://localhost:3000/chat
-
-### Customize
-
-- **System prompt:** `app/agents/prompts.py`
-- **Add tools:** See `docs/howto/add-agent-tool.md`
-- **Agent config:** `.env` → `AI_MODEL`, `AI_TEMPERATURE`
-
-## Message Ratings
-
-Users can rate AI responses with 👍/👎 and optional feedback comments.
-Administrators can view analytics and export rating data.
-- Rate messages at http://localhost:3000/chat
-- Admin dashboard at http://localhost:3000/admin/ratings
-
-See `docs/howto/use-ratings.md` for full documentation.
-
-## Project Structure
-
-```
-backend/app/
-├── api/routes/v1/        # API endpoints
-├── core/config.py        # Settings (from .env)
-├── services/             # Business logic
-├── repositories/         # Data access
-├── schemas/              # Pydantic models
-├── db/models/            # Database models
-├── agents/               # AI agents & tools
-├── commands/             # CLI commands (auto-discovered)
-└── worker/               # Background tasks
-```
-
-## Guides
-
-| Guide | Description |
-|-------|-------------|
-| `docs/howto/add-api-endpoint.md` | Add a new API endpoint |
-| `docs/howto/add-agent-tool.md` | Create a new agent tool |
-| `docs/howto/customize-agent-prompt.md` | Customize agent behavior |
-| `docs/howto/add-background-task.md` | Add background tasks |
-
-## Environment Variables
-
-All config is in `backend/.env`. Key variables:
-
+### 2. Cấu hình Backend
+Tạo file `shb_chatbot/backend/.env`:
 ```bash
-POSTGRES_HOST=localhost
-POSTGRES_PASSWORD=postgres
-OPENAI_API_KEY=sk-...
+GEMINI_API_KEY=your_gemini_key
+VNSTOCK_API_KEY=your_vnstock_key
+DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/shb_chatbot
+REDIS_URL=redis://localhost:6379/0
 ```
 
-See `backend/.env.example` for all available variables.
-
-## Deployment
-
-### Frontend (Vercel)
-
+### 3. Khởi chạy với Docker
 ```bash
-cd frontend
-npx vercel --prod
+# Chạy database và redis
+docker-compose up -d db redis
+
+# Cài đặt dependencies (dùng uv)
+cd shb_chatbot/backend
+uv sync
+uv run shb_chatbot db upgrade
+uv run shb_chatbot user create --email admin@example.com --password admin123 --superuser
+
+# Chạy Server & Worker
+uv run shb_chatbot server run --reload
 ```
 
-Set environment variables in Vercel dashboard:
-- `BACKEND_URL` = your backend URL
-- `BACKEND_WS_URL` = your backend WebSocket URL
-- `NEXT_PUBLIC_AUTH_ENABLED` = `true`
-
-### Backend (Docker)
-
+### 4. Khởi chạy Frontend
 ```bash
-make docker-prod
+cd shb_chatbot/frontend
+npm install
+npm run dev
 ```
+Truy cập: [http://localhost:3000](http://localhost:3000)
+
+## 🌐 Kế hoạch Triển khai (Production)
+
+Dự án đã sẵn sàng để triển khai lên các nền tảng Cloud:
+1.  **Database:** Supabase (PostgreSQL).
+2.  **Backend:** Render / Railway (Docker Support).
+3.  **Frontend:** Cloudflare Pages / Vercel.
+
+Chi tiết các bước triển khai có tại: `plans/deployment-plan.md`.
+
+## 📁 Cấu trúc thư mục
+
+```
+shb_chatbot/
+├── backend/            # FastAPI Source Code
+│   ├── app/agents/     # AI Agent logic & Tools
+│   ├── app/api/        # REST & WebSocket Routes
+│   └── tests/          # Integration & Unit tests
+├── frontend/           # Next.js Application
+└── docs/               # Technical Documentation
+```
+
+## 🤝 Đóng góp
+Mọi ý kiến đóng góp và báo lỗi xin vui lòng tạo Issue hoặc Pull Request trên GitHub.
 
 ---
-
-*Generated with [Full-Stack AI Agent Template](https://github.com/vstorm-co/full-stack-ai-agent-template) v0.2.6*
+*Phát triển bởi chuyên gia AI dành cho cộng đồng nhà đầu tư SHB.*
