@@ -43,11 +43,18 @@ const securityHeaders = [
   },
 ];
 
-const nextConfig: NextConfig = {
-  output: "standalone",
+const isCloudflare = process.env.IS_CLOUDFLARE === "true";
 
+const nextConfig: NextConfig = {
+  output: isCloudflare ? "export" : "standalone",
+  images: {
+    unoptimized: isCloudflare,
+  },
   // Security headers
   async headers() {
+    // Headers only work in non-export mode
+    if (isCloudflare) return [];
+    
     return [
       {
         source: "/(.*)",
