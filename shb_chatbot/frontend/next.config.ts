@@ -10,7 +10,7 @@ const ContentSecurityPolicy = `
   style-src 'self' 'unsafe-inline';
   img-src 'self' blob: data: https:;
   font-src 'self' data:;
-  connect-src 'self' ws: wss: http://localhost:* https://localhost:*;
+  connect-src 'self' ws: wss: http://localhost:* https://localhost:* *.onrender.com https://*.onrender.com wss://*.onrender.com;
   frame-ancestors 'none';
   base-uri 'self';
   form-action 'self';
