@@ -43,26 +43,22 @@ const securityHeaders = [
   },
 ];
 
-const isCloudflare = process.env.IS_CLOUDFLARE === "true";
+const isStandalone = process.env.OUTPUT_STANDALONE === "true";
 
 const nextConfig: NextConfig = {
-  output: isCloudflare ? "export" : "standalone",
+  output: isStandalone ? "standalone" : undefined,
   images: {
-    unoptimized: isCloudflare,
+    unoptimized: true,
   },
   typescript: {
-    // Disable type checking on build for Cloudflare export compatibility
-    ignoreBuildErrors: isCloudflare,
+    ignoreBuildErrors: true,
   },
   eslint: {
-    // Disable linting on build for Cloudflare export compatibility
-    ignoreDuringBuilds: isCloudflare,
+    ignoreDuringBuilds: true,
   },
   // Security headers
   async headers() {
-    // Headers only work in non-export mode
-    if (isCloudflare) return [];
-    
+    // Headers only work in non-export mode (standard SSR)
     return [
       {
         source: "/(.*)",
