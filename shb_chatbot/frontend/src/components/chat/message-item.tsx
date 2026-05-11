@@ -1,20 +1,51 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { ChatMessage } from "@/types";
+import type { ChatMessage, ToolCall } from "@/types";
 import { ToolCallCard } from "./tool-call-card";
 import { MarkdownContent } from "./markdown-content";
 import { CopyButton } from "./copy-button";
 import { RatingButtons } from "./rating-buttons";
 import { useChatStore } from "@/stores";
-import { User, Bot } from "lucide-react";
+import { User, Bot, ChevronDown, ChevronUp, Wrench } from "lucide-react";
 import Image from "next/image";
 import { useAuthStore } from "@/stores";
 import { getFileUrl } from "@/lib/file-api";
+import { useState } from "react";
 
 interface MessageItemProps {
   message: ChatMessage;
   groupPosition?: "first" | "middle" | "last" | "single";
+}
+
+function CollapsibleToolCalls({ toolCalls }: { toolCalls: ToolCall[] }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className="w-full space-y-2">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground/60 hover:text-brand transition-colors uppercase tracking-widest py-1"
+      >
+        <div className={cn(
+          "p-1 rounded bg-muted border border-border/40",
+          isExpanded && "bg-brand/10 border-brand/20 text-brand"
+        )}>
+          <Wrench className="h-3 w-3" />
+        </div>
+        <span>{isExpanded ? "Hide reasoning & actions" : `Show reasoning & actions (${toolCalls.length})`}</span>
+        {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+      </button>
+      
+      {isExpanded && (
+        <div className="space-y-2 w-full animate-in fade-in slide-in-from-top-2 duration-200">
+          {toolCalls.map((toolCall) => (
+            <ToolCallCard key={toolCall.id} toolCall={toolCall} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function MessageItem({ message, groupPosition }: MessageItemProps) {
@@ -124,11 +155,7 @@ export function MessageItem({ message, groupPosition }: MessageItemProps) {
         )}
 
         {message.toolCalls && message.toolCalls.length > 0 && (
-          <div className="space-y-2 w-full">
-            {message.toolCalls.map((toolCall) => (
-              <ToolCallCard key={toolCall.id} toolCall={toolCall} />
-            ))}
-          </div>
+          <CollapsibleToolCalls toolCalls={message.toolCalls} />
         )}
 
         {!message.isStreaming && message.content && (

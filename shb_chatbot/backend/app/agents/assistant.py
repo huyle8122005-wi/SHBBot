@@ -93,10 +93,13 @@ class AssistantAgent:
                 WebFetch(),
             ]
 
+        # Use the customized system prompt
+        from app.agents.prompts import DEFAULT_SYSTEM_PROMPT
+
         agent = Agent[Deps, str](
             model=model,
             model_settings=ModelSettings(temperature=self.temperature),
-            system_prompt=self.system_prompt,
+            system_prompt=DEFAULT_SYSTEM_PROMPT,
             capabilities=capabilities,
         )
 
@@ -154,6 +157,24 @@ class AssistantAgent:
             Use this tool to provide a balanced view of the risks and mitigation strategies for investing in SHB.
             """
             return analyze_shb_risks()
+
+        @agent.tool
+        async def search_shb_report_tool(ctx: RunContext[Deps], query: str) -> str:
+            """Search for specific information in the SHB 2025 analysis report PDF.
+
+            Use this tool to get in-depth data, tables, or specific details from the official SHB report.
+            """
+            from app.agents.tools.shb_report_search import search_shb_report
+            return search_shb_report(query)
+
+        @agent.tool
+        async def real_time_market_data(ctx: RunContext[Deps], symbol: str) -> dict[str, Any]:
+            """Get real-time market data for a stock using VNStock API.
+
+            Use this tool when the user asks for the current price or real-time financial metrics.
+            """
+            from app.agents.tools.vnstock_tool import get_realtime_stock_data
+            return get_realtime_stock_data(symbol)
 
     @property
     def agent(self) -> Agent[Deps, str]:
