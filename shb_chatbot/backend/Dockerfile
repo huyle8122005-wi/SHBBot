@@ -20,9 +20,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Copy application
 COPY . /app
 
-# Install project
+# Install project (without requiring a package directory)
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+    uv sync --frozen --no-dev --no-install-project
 
 
 # Runtime stage
