@@ -8,9 +8,13 @@ import { Button, Input, Label, Card, CardHeader, CardTitle, CardContent, CardFoo
 import { ApiError } from "@/lib/api-client";
 import { ROUTES } from "@/lib/constants";
 
+import { useTranslations } from "next-intl";
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function LoginForm() {
+  const t = useTranslations("auth");
+  const commonT = useTranslations("common");
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,9 +31,9 @@ export function LoginForm() {
 
     try {
       await login({ email, password });
-      toast.success("Logged in successfully");
+      toast.success(t("loginSuccess"));
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Login failed. Please try again.";
+      const message = err instanceof ApiError ? err.message : t("invalidCredentials");
       setError(message);
       toast.error(message);
       setIsLoading(false);
@@ -39,12 +43,12 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle className="text-2xl text-center">Login</CardTitle>
+        <CardTitle className="text-2xl text-center">{t("login")}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("email")}</Label>
             <Input
               id="email"
               type="email"
@@ -61,7 +65,7 @@ export function LoginForm() {
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("password")}</Label>
             <Input
               id="password"
               type="password"
@@ -75,15 +79,28 @@ export function LoginForm() {
             <p className="text-sm text-destructive">{error}</p>
           )}
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Logging in..." : "Login"}
+            {isLoading ? commonT("loading") : t("login")}
+          </Button>
+
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">{commonT("or") || "Or"}</span>
+            </div>
+          </div>
+
+          <Button variant="outline" type="button" className="w-full" asChild disabled={isLoading}>
+            <Link href={ROUTES.CHAT}>{t("continueAsGuest") || "Tiếp tục ẩn danh"}</Link>
           </Button>
         </form>
       </CardContent>
       <CardFooter className="justify-center">
         <p className="text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
+          {t("noAccount")}{" "}
           <Link href={ROUTES.REGISTER} className="text-primary hover:underline">
-            Register
+            {t("register")}
           </Link>
         </p>
       </CardFooter>

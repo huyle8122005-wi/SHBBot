@@ -5,21 +5,26 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 import { LayoutDashboard, MessageSquare, UserCircle } from "lucide-react";
-import { useSidebarStore } from "@/stores";
+import { useSidebarStore, useAuthStore } from "@/stores";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui";
 
 const navigation = [
-  { name: "Dashboard", href: ROUTES.DASHBOARD, icon: LayoutDashboard },
-  { name: "Chat", href: ROUTES.CHAT, icon: MessageSquare },
-  { name: "Profile", href: ROUTES.PROFILE, icon: UserCircle },
+  { name: "Dashboard", href: ROUTES.DASHBOARD, icon: LayoutDashboard, protected: true },
+  { name: "Chat", href: ROUTES.CHAT, icon: MessageSquare, protected: false },
+  { name: "Profile", href: ROUTES.PROFILE, icon: UserCircle, protected: true },
 ];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { isAuthenticated, user } = useAuthStore();
 
   return (
     <nav className="flex-1 space-y-1 p-4">
-      {navigation.map((item) => {
+      {navigation.filter(item => {
+        if (!isAuthenticated && item.protected) return false;
+        if (item.name === "Dashboard" && user?.role !== "admin") return false;
+        return true;
+      }).map((item) => {
         const isActive = pathname === item.href;
         return (
           <Link

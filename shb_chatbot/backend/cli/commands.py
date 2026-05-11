@@ -25,6 +25,12 @@ def server_cli():
 def server_run(host: str, port: int, reload: bool):
     """Run the development server."""
     import uvicorn
+    import os
+
+    # Respect PORT environment variable if set (for Render/Heroku)
+    env_port = os.environ.get("PORT")
+    if env_port:
+        port = int(env_port)
 
     uvicorn.run(
         "app.main:app",

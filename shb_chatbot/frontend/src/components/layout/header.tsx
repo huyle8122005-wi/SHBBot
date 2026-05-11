@@ -39,7 +39,13 @@ export function Header() {
 
           {/* Desktop nav links */}
           <nav className="hidden items-center gap-0.5 md:flex">
-            {adminNavItems.filter(item => !item.adminOnly || user?.role === "admin").map((item) => {
+            {adminNavItems.filter(item => {
+              // Hide admin-only items
+              if (item.adminOnly && user?.role !== "admin") return false;
+              // Hide Profile and Dashboard for guests
+              if (!isAuthenticated && (item.name === "Profile" || item.name === "Dashboard")) return false;
+              return true;
+            }).map((item) => {
               const isActive = pathname?.includes(item.href);
               return (
                 <Link

@@ -16,7 +16,8 @@
     "close": "Close",
     "confirm": "Confirm",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "or": "Or"
   },
   "navigation": {
     "home": "Home",
@@ -41,7 +42,8 @@
     "emailRequired": "Email is required",
     "passwordRequired": "Password is required",
     "passwordMismatch": "Passwords do not match",
-    "continueWithGoogle": "Continue with Google"
+    "continueWithGoogle": "Continue with Google",
+    "continueAsGuest": "Continue as Guest"
   },
   "profile": {
     "title": "Profile",

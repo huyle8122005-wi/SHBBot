@@ -4,6 +4,7 @@
 from pathlib import Path
 from typing import Literal
 
+import pydantic
 from pydantic import computed_field, field_validator, ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -49,36 +50,49 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = "shb_chatbot"
     
-    _DATABASE_URL: str | None = None
-    _DATABASE_URL_SYNC: str | None = None
+    # Allow overriding full URLs from environment
+    DATABASE_URL_OVERRIDE: str | None = pydantic.Field(default=None, alias="DATABASE_URL")
+    DATABASE_URL_SYNC_OVERRIDE: str | None = pydantic.Field(default=None, alias="DATABASE_URL_SYNC")
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def DATABASE_URL(self) -> str:
         """Build async PostgreSQL connection URL."""
-        if self._DATABASE_URL:
-            return self._DATABASE_URL
-            
-        from urllib.parse import quote_plus
-        encoded_password = quote_plus(self.POSTGRES_PASSWORD)
-        return (
-            f"postgresql+asyncpg://{self.POSTGRES_USER}:{encoded_password}"
-            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-        )
+        if self.DATABASE_URL_OVERRIDE:
+            url = self.DATABASE_URL_OVERRIDE
+        else:
+            from urllib.parse import quote_plus
+            encoded_password = quote_plus(self.POSTGRES_PASSWORD)
+            url = (
+                f"postgresql+asyncpg://{self.POSTGRES_USER}:{encoded_password}"
+                f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+            )
+        
+        # Add SSL requirement for Supabase/Production if not already present
+        if ("supabase.co" in url or self.ENVIRONMENT == "production") and "sslmode=" not in url:
+            separator = "&" if "?" in url else "?"
+            url += f"{separator}sslmode=require"
+        return url
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def DATABASE_URL_SYNC(self) -> str:
         """Build sync PostgreSQL connection URL (for Alembic)."""
-        if self._DATABASE_URL_SYNC:
-            return self._DATABASE_URL_SYNC
-            
-        from urllib.parse import quote_plus
-        encoded_password = quote_plus(self.POSTGRES_PASSWORD)
-        return (
-            f"postgresql://{self.POSTGRES_USER}:{encoded_password}"
-            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-        )
+        if self.DATABASE_URL_SYNC_OVERRIDE:
+            url = self.DATABASE_URL_SYNC_OVERRIDE
+        else:
+            from urllib.parse import quote_plus
+            encoded_password = quote_plus(self.POSTGRES_PASSWORD)
+            url = (
+                f"postgresql://{self.POSTGRES_USER}:{encoded_password}"
+                f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+            )
+        
+        # Add SSL requirement for Supabase/Production if not already present
+        if ("supabase.co" in url or self.ENVIRONMENT == "production") and "sslmode=" not in url:
+            separator = "&" if "?" in url else "?"
+            url += f"{separator}sslmode=require"
+        return url
 
     # Pool configuration
     DB_POOL_SIZE: int = 5
