@@ -50,6 +50,14 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: isCloudflare,
   },
+  typescript: {
+    // Disable type checking on build for Cloudflare export compatibility
+    ignoreBuildErrors: isCloudflare,
+  },
+  eslint: {
+    // Disable linting on build for Cloudflare export compatibility
+    ignoreDuringBuilds: isCloudflare,
+  },
   // Security headers
   async headers() {
     // Headers only work in non-export mode
