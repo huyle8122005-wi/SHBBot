@@ -143,18 +143,33 @@ class Settings(BaseSettings):
     REDIS_PORT: int = 6379
     REDIS_PASSWORD: str | None = None
     REDIS_DB: int = 0
+    
+    # Allow overriding full Redis URL from environment
+    REDIS_URL_OVERRIDE: str | None = pydantic.Field(default=None, alias="REDIS_URL")
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def REDIS_URL(self) -> str:
         """Build Redis connection URL."""
+        if self.REDIS_URL_OVERRIDE:
+            return self.REDIS_URL_OVERRIDE
         if self.REDIS_PASSWORD:
             return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
     # === Celery ===
-    CELERY_BROKER_URL: str = "redis://localhost:6379/0"
-    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
+    CELERY_BROKER_URL_OVERRIDE: str | None = pydantic.Field(default=None, alias="CELERY_BROKER_URL")
+    CELERY_RESULT_BACKEND_OVERRIDE: str | None = pydantic.Field(default=None, alias="CELERY_RESULT_BACKEND")
+
+    @computed_field # type: ignore[prop-decorator]
+    @property
+    def CELERY_BROKER_URL(self) -> str:
+        return self.CELERY_BROKER_URL_OVERRIDE or self.REDIS_URL
+
+    @computed_field # type: ignore[prop-decorator]
+    @property
+    def CELERY_RESULT_BACKEND(self) -> str:
+        return self.CELERY_RESULT_BACKEND_OVERRIDE or self.REDIS_URL
 
     # === AI Agent (pydantic_ai, openai/gemini) ===
     OPENAI_API_KEY: str = ""

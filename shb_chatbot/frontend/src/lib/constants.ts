@@ -38,7 +38,7 @@ export const ROUTES = {
 } as const;
 
 // WebSocket URL (for chat - direct to backend, use wss:// in production)
-export const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
+export const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "wss://shbbot.onrender.com";
 
 // Backend API URL (public, for direct links like API docs)
-export const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+export const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://shbbot.onrender.com";

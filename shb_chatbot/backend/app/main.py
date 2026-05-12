@@ -42,8 +42,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[LifespanState, None]:
 
     instrument_pydantic_ai()
     redis_client = RedisClient()
-    await redis_client.connect()
-    state["redis"] = redis_client
+    try:
+        await redis_client.connect()
+        state["redis"] = redis_client
+        logger.info("Successfully connected to Redis")
+    except Exception as e:
+        logger.error(f"Failed to connect to Redis: {e}")
     yield state
 
     # === Shutdown ===

@@ -34,6 +34,7 @@ dependencies = [
     "tqdm>=4.66.0",
     "pymupdf>=1.27.2.3",
     "vnstock>=4.0.2",
+    "aiosqlite>=0.22.1",
 ]
 
 [project.optional-dependencies]
