@@ -75,15 +75,27 @@ class UserService:
         Raises:
             AuthenticationError: If credentials are invalid or user is inactive.
         """
+        import logging
+        auth_logger = logging.getLogger("app.auth")
+        
         user = await user_repo.get_by_email(self.db, email)
-        if (
-            not user
-            or not user.hashed_password
-            or not verify_password(password, user.hashed_password)
-        ):
+        if not user:
+            auth_logger.warning(f"Auth failed: User not found with email {email}")
             raise AuthenticationError(message="Invalid email or password")
+            
+        if not user.hashed_password:
+            auth_logger.warning(f"Auth failed: User {email} has no hashed_password set")
+            raise AuthenticationError(message="Invalid email or password")
+            
+        if not verify_password(password, user.hashed_password):
+            auth_logger.warning(f"Auth failed: Incorrect password for user {email}")
+            raise AuthenticationError(message="Invalid email or password")
+            
         if not user.is_active:
+            auth_logger.warning(f"Auth failed: User {email} is inactive")
             raise AuthenticationError(message="User account is disabled")
+            
+        auth_logger.info(f"Auth success: User {email} logged in")
         return user
 
     async def update(self, user_id: UUID, user_in: UserUpdate) -> User:
