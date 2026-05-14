@@ -69,9 +69,6 @@ class Settings(BaseSettings):
             )
         
         # Add SSL requirement for Supabase/Production if not already present
-        if ("supabase.co" in url or self.ENVIRONMENT == "production") and "sslmode=" not in url:
-            separator = "&" if "?" in url else "?"
-            url += f"{separator}sslmode=require"
         return url
 
     @computed_field  # type: ignore[prop-decorator]
@@ -89,9 +86,6 @@ class Settings(BaseSettings):
             )
         
         # Add SSL requirement for Supabase/Production if not already present
-        if ("supabase.co" in url or self.ENVIRONMENT == "production") and "sslmode=" not in url:
-            separator = "&" if "?" in url else "?"
-            url += f"{separator}sslmode=require"
         return url
 
     # Pool configuration
