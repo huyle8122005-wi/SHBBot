@@ -2,11 +2,12 @@
 
 import logging
 from typing import Any
-import pandas as pd
 
+import pandas as pd
+from vnstock import register_user
 from vnstock.api.financial import Finance
 from vnstock.api.quote import Quote
-from vnstock import register_user
+
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)

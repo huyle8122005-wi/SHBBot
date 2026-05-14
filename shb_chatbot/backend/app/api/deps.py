@@ -92,13 +92,14 @@ async def get_current_user(
     """Get current authenticated user from JWT token.
 
     Returns the full User object including role information.
+    Automatically syncs user from Supabase if they don't exist locally.
 
     Raises:
         AuthenticationError: If token is invalid or user not found.
     """
     from uuid import UUID
-
     from app.core.security import verify_token
+    from app.schemas.user import UserCreate
 
     payload = verify_token(token)
     if payload is None:
@@ -108,11 +109,34 @@ async def get_current_user(
     if payload.get("type") != "access":
         raise AuthenticationError(message="Invalid token type")
 
-    user_id = payload.get("sub")
-    if user_id is None:
+    user_id_str = payload.get("sub")
+    if user_id_str is None:
         raise AuthenticationError(message="Invalid token payload")
 
-    user = await user_service.get_by_id(UUID(user_id))
+    user_id = UUID(user_id_str)
+
+    try:
+        user = await user_service.get_by_id(user_id)
+    except Exception:
+        # User not found in local DB, but token is valid (Supabase token)
+        # Try to create user locally
+        email = payload.get("email")
+        if not email:
+            raise AuthenticationError(message="User not found and no email in token")
+
+        # Create user with Supabase ID
+        try:
+            user = await user_service.register(
+                UserCreate(
+                    email=email,
+                    password="supabase-managed", # Dummy password
+                    full_name=payload.get("user_metadata", {}).get("full_name"),
+                ),
+                user_id=user_id
+            )
+        except Exception as e:
+            raise AuthenticationError(message=f"Failed to sync user: {e!s}")
+
     if not user.is_active:
         raise AuthenticationError(message="User account is disabled")
 

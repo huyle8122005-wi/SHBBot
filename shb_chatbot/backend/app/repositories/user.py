@@ -43,6 +43,7 @@ async def create(
     full_name: str | None = None,
     is_active: bool = True,
     role: str = "user",
+    id: UUID | None = None,
 ) -> User:
     """Create a new user.
 
@@ -55,6 +56,9 @@ async def create(
         is_active=is_active,
         role=role,
     )
+    if id:
+        user.id = id
+
     db.add(user)
     await db.flush()
     await db.refresh(user)

@@ -38,8 +38,12 @@ def create_refresh_token(
 
 
 def verify_token(token: str) -> dict[str, Any] | None:
-    """Verify a JWT token and return payload."""
+    """Verify a JWT token and return payload.
+    
+    Tries settings.SECRET_KEY first, then settings.SUPABASE_JWT_SECRET if available.
+    """
     try:
+        # Try local secret first
         payload = jwt.decode(
             token,
             settings.SECRET_KEY,
@@ -47,6 +51,23 @@ def verify_token(token: str) -> dict[str, Any] | None:
         )
         return payload
     except jwt.PyJWTError:
+        # If local secret fails, try Supabase secret
+        if settings.SUPABASE_JWT_SECRET:
+            try:
+                payload = jwt.decode(
+                    token,
+                    settings.SUPABASE_JWT_SECRET,
+                    algorithms=["HS256"],
+                    audience="authenticated",  # Supabase default
+                )
+                # Normalize Supabase payload to match our expectations
+                # Supabase uses 'sub' for user ID, which matches our 'sub'.
+                # We add 'type': 'access' if not present to pass our checks.
+                if "type" not in payload:
+                    payload["type"] = "access"
+                return payload
+            except jwt.PyJWTError:
+                return None
         return None
 
 

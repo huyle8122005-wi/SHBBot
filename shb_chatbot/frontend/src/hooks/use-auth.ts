@@ -4,9 +4,10 @@ import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores";
-import { apiClient, ApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
 import type { User, LoginRequest, RegisterRequest } from "@/types";
 import { ROUTES } from "@/lib/constants";
+import { supabase } from "@/lib/supabase";
 
 export function useAuth() {
   const router = useRouter();
@@ -14,37 +15,81 @@ export function useAuth() {
     useAuthStore();
 
   // Check auth status on mount — always fetch fresh user data.
-  // /auth/me returns the access_token in the body so we can use it for
-  // WebSocket auth (cookie is httpOnly, not readable from JS).
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const data = await apiClient.get<User & { access_token?: string }>("/auth/me");
-        const { access_token, ...userData } = data;
-        setUser(userData as User);
-        useAuthStore.getState().setAccessToken(access_token ?? null);
-      } catch {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          // Sync session with Next.js cookies if needed
+          await apiClient.post("/auth/session", { 
+            access_token: session.access_token,
+            refresh_token: session.refresh_token 
+          });
+          
+          const data = await apiClient.get<User & { access_token?: string }>("/auth/me");
+          const { access_token, ...userData } = data;
+          setUser(userData as User);
+          useAuthStore.getState().setAccessToken(access_token ?? session.access_token);
+        } else {
+          setUser(null);
+          useAuthStore.getState().setAccessToken(null);
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error);
         setUser(null);
         useAuthStore.getState().setAccessToken(null);
+      } finally {
+        setLoading(false);
       }
     };
 
     checkAuth();
-  }, [setUser]);
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        await apiClient.post("/auth/session", { 
+          access_token: session.access_token,
+          refresh_token: session.refresh_token 
+        });
+        const data = await apiClient.get<User>("/auth/me");
+        setUser(data);
+      } else if (event === 'SIGNED_OUT') {
+        await apiClient.post("/auth/logout");
+        setUser(null);
+        useAuthStore.getState().setAccessToken(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [setUser, setLoading]);
 
   const login = useCallback(
     async (credentials: LoginRequest) => {
       setLoading(true);
       try {
-        const response = await apiClient.post<{
-          user: User;
-          access_token: string;
-          message: string;
-        }>("/auth/login", credentials);
-        setUser(response.user);
-        useAuthStore.getState().setAccessToken(response.access_token);
-        router.push(response.user.role === "admin" ? ROUTES.DASHBOARD : ROUTES.CHAT);
-        return response;
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: credentials.email,
+          password: credentials.password,
+        });
+
+        if (error) throw error;
+        if (!data.session) throw new Error("No session created");
+
+        // Sync session with Next.js cookies
+        await apiClient.post("/auth/session", { 
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token 
+        });
+
+        const userData = await apiClient.get<User>("/auth/me");
+        setUser(userData);
+        useAuthStore.getState().setAccessToken(data.session.access_token);
+        
+        router.push(userData.role === "admin" ? ROUTES.DASHBOARD : ROUTES.CHAT);
+        return { user: userData, access_token: data.session.access_token };
       } catch (error) {
         throw error;
       } finally {
@@ -56,17 +101,32 @@ export function useAuth() {
 
   const register = useCallback(
     async (data: RegisterRequest) => {
-      const response = await apiClient.post<{ id: string; email: string }>(
-        "/auth/register",
-        data
-      );
-      return response;
+      setLoading(true);
+      try {
+        const { data: signUpData, error } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: {
+            data: {
+              full_name: data.full_name,
+            }
+          }
+        });
+
+        if (error) throw error;
+        return signUpData.user;
+      } catch (error) {
+        throw error;
+      } finally {
+        setLoading(false);
+      }
     },
-    []
+    [setLoading]
   );
 
   const handleLogout = useCallback(async () => {
     try {
+      await supabase.auth.signOut();
       await apiClient.post("/auth/logout");
     } catch {
       // Ignore logout errors
@@ -79,19 +139,21 @@ export function useAuth() {
 
   const refreshToken = useCallback(async () => {
     try {
-      const refreshResponse = await apiClient.post<{ access_token: string; message: string }>(
-        "/auth/refresh",
-      );
-      useAuthStore.getState().setAccessToken(refreshResponse.access_token);
-      // Re-fetch user after token refresh
+      const { data: { session }, error } = await supabase.auth.refreshSession();
+      if (error || !session) return false;
+
+      await apiClient.post("/auth/session", { 
+        access_token: session.access_token,
+        refresh_token: session.refresh_token 
+      });
+
+      useAuthStore.getState().setAccessToken(session.access_token);
       const userData = await apiClient.get<User>("/auth/me");
       setUser(userData);
       return true;
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        logout();
-        router.push(ROUTES.LOGIN);
-      }
+      logout();
+      router.push(ROUTES.LOGIN);
       return false;
     }
   }, [logout, router, setUser]);

@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = "shb_chatbot"
-    
+
     # Allow overriding full URLs from environment
     DATABASE_URL_OVERRIDE: str | None = pydantic.Field(default=None, alias="DATABASE_URL")
     DATABASE_URL_SYNC_OVERRIDE: str | None = pydantic.Field(default=None, alias="DATABASE_URL_SYNC")
@@ -67,8 +67,12 @@ class Settings(BaseSettings):
                 f"postgresql+asyncpg://{self.POSTGRES_USER}:{encoded_password}"
                 f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
             )
-        
-        # Add SSL requirement for Supabase/Production if not already present
+
+        # Add SSL requirement for Supabase if not already present
+        if "supabase.co" in url and "sslmode=" not in url:
+            separator = "&" if "?" in url else "?"
+            url += f"{separator}sslmode=require"
+
         return url
 
     @computed_field  # type: ignore[prop-decorator]
@@ -84,8 +88,12 @@ class Settings(BaseSettings):
                 f"postgresql://{self.POSTGRES_USER}:{encoded_password}"
                 f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
             )
-        
-        # Add SSL requirement for Supabase/Production if not already present
+
+        # Add SSL requirement for Supabase if not already present
+        if "supabase.co" in url and "sslmode=" not in url:
+            separator = "&" if "?" in url else "?"
+            url += f"{separator}sslmode=require"
+
         return url
 
     # Pool configuration
@@ -95,6 +103,9 @@ class Settings(BaseSettings):
 
     # === Auth (SECRET_KEY for JWT/Session/Admin) ===
     SECRET_KEY: str = "change-me-in-production-use-openssl-rand-hex-32"
+    SUPABASE_JWT_SECRET: str | None = None
+    SUPABASE_URL: str | None = None
+    SUPABASE_ANON_KEY: str | None = None
 
     @field_validator("SECRET_KEY")
     @classmethod
@@ -137,7 +148,7 @@ class Settings(BaseSettings):
     REDIS_PORT: int = 6379
     REDIS_PASSWORD: str | None = None
     REDIS_DB: int = 0
-    
+
     # Allow overriding full Redis URL from environment
     REDIS_URL_OVERRIDE: str | None = pydantic.Field(default=None, alias="REDIS_URL")
 

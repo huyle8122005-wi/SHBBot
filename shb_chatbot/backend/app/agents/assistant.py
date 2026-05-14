@@ -31,8 +31,12 @@ from app.agents.tools import (
     forecast_shb_price,
     get_current_datetime,
 )
-from app.agents.tools.web_search_tool import search_web, get_latest_shb_interest_rates
-from app.agents.tools.vnstock_tool import get_realtime_stock_data, compare_banking_stocks, screen_shb_peers
+from app.agents.tools.vnstock_tool import (
+    compare_banking_stocks,
+    get_realtime_stock_data,
+    screen_shb_peers,
+)
+from app.agents.tools.web_search_tool import get_latest_shb_interest_rates, search_web
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)

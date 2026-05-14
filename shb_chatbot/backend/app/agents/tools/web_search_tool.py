@@ -2,6 +2,7 @@
 
 import logging
 from typing import Any
+
 from duckduckgo_search import DDGS
 
 logger = logging.getLogger(__name__)

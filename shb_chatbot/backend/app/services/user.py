@@ -47,7 +47,7 @@ class UserService:
         """Get multiple users with pagination."""
         return await user_repo.get_multi(self.db, skip=skip, limit=limit)
 
-    async def register(self, user_in: UserCreate) -> User:
+    async def register(self, user_in: UserCreate, user_id: UUID | None = None) -> User:
         """Register a new user.
 
         Raises:
@@ -67,6 +67,7 @@ class UserService:
             hashed_password=hashed_password,
             full_name=user_in.full_name,
             role=user_in.role.value,
+            id=user_id,
         )
 
     async def authenticate(self, email: str, password: str) -> User:
@@ -77,24 +78,24 @@ class UserService:
         """
         import logging
         auth_logger = logging.getLogger("app.auth")
-        
+
         user = await user_repo.get_by_email(self.db, email)
         if not user:
             auth_logger.warning(f"Auth failed: User not found with email {email}")
             raise AuthenticationError(message="Invalid email or password")
-            
+
         if not user.hashed_password:
             auth_logger.warning(f"Auth failed: User {email} has no hashed_password set")
             raise AuthenticationError(message="Invalid email or password")
-            
+
         if not verify_password(password, user.hashed_password):
             auth_logger.warning(f"Auth failed: Incorrect password for user {email}")
             raise AuthenticationError(message="Invalid email or password")
-            
+
         if not user.is_active:
             auth_logger.warning(f"Auth failed: User {email} is inactive")
             raise AuthenticationError(message="User account is disabled")
-            
+
         auth_logger.info(f"Auth success: User {email} logged in")
         return user
 
