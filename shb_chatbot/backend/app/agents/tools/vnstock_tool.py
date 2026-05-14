@@ -64,6 +64,22 @@ def get_realtime_stock_data(symbol: str) -> dict[str, Any]:
         logger.error(f"VNStock API Error: {e}")
         return {"error": str(e)}
 
+def compare_banking_stocks(symbols: list[str]) -> list[dict[str, Any]]:
+    """Compare multiple banking stocks.
+
+    Args:
+        symbols: List of stock symbols to compare.
+
+    Returns:
+        List of dictionaries with key metrics for each stock.
+    """
+    results = []
+    for symbol in symbols:
+        data = get_realtime_stock_data(symbol)
+        if "error" not in data:
+            results.append(data)
+    return results
+
 def screen_shb_peers() -> list[str]:
     """Get a list of banking industry peers for comparison."""
     # Pre-defined banking peers as listing_companies API can be heavy/unreliable without full account

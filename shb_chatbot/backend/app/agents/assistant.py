@@ -31,6 +31,8 @@ from app.agents.tools import (
     forecast_shb_price,
     get_current_datetime,
 )
+from app.agents.tools.web_search_tool import search_web, get_latest_shb_interest_rates
+from app.agents.tools.vnstock_tool import get_realtime_stock_data, compare_banking_stocks, screen_shb_peers
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -173,8 +175,39 @@ class AssistantAgent:
 
             Use this tool when the user asks for the current price or real-time financial metrics.
             """
-            from app.agents.tools.vnstock_tool import get_realtime_stock_data
             return get_realtime_stock_data(symbol)
+
+        @agent.tool
+        async def banking_peers(ctx: RunContext[Deps]) -> list[str]:
+            """Get a list of common banking peers for SHB comparison.
+
+            Use this tool to find which other banks (like TCB, ACB, VPB) to compare SHB with.
+            """
+            return screen_shb_peers()
+
+        @agent.tool
+        async def compare_stocks(ctx: RunContext[Deps], symbols: list[str]) -> list[dict[str, Any]]:
+            """Compare multiple stocks (especially banking stocks).
+
+            Use this tool when the user asks to compare SHB with other banks like TCB, ACB, VPB, etc.
+            """
+            return compare_banking_stocks(symbols)
+
+        @agent.tool
+        async def web_search(ctx: RunContext[Deps], query: str) -> list[dict[str, Any]]:
+            """Search the web for general information, news, or latest banking rates.
+
+            Use this tool when the information is not available in the SHB report or VNStock API.
+            """
+            return search_web(query)
+
+        @agent.tool
+        async def get_shb_interest_rates(ctx: RunContext[Deps]) -> str:
+            """Get the latest interest rates for SHB bank.
+
+            Use this tool specifically when the user asks about SHB's current interest rates.
+            """
+            return get_latest_shb_interest_rates()
 
     @property
     def agent(self) -> Agent[Deps, str]:

@@ -35,6 +35,7 @@ dependencies = [
     "pymupdf>=1.27.2.3",
     "vnstock>=4.0.2",
     "aiosqlite>=0.22.1",
+    "duckduckgo-search>=8.1.1",
 ]
 
 [project.optional-dependencies]
