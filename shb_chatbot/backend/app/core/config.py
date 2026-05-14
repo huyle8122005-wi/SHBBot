@@ -208,7 +208,12 @@ class Settings(BaseSettings):
     VNSTOCK_API_KEY: str = ""
 
     # === CORS ===
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8080"]
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:8080",
+        "https://shbbot.pages.dev",
+        "https://shbbot.onrender.com",
+    ]
     CORS_ALLOW_CREDENTIALS: bool = True
     CORS_ALLOW_METHODS: list[str] = ["*"]
     CORS_ALLOW_HEADERS: list[str] = ["*"]
@@ -219,12 +224,15 @@ class Settings(BaseSettings):
         """Assemble CORS origins from string or list."""
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
+        elif isinstance(v, list):
+            return v
+        elif isinstance(v, str):
             import json
-            if isinstance(v, str):
-                v = json.loads(v)
-            return v  # type: ignore[return-value]
-        raise ValueError(v)
+            try:
+                return json.loads(v)
+            except Exception:
+                return [v]
+        return v  # type: ignore[return-value]
 
 
 settings = Settings()

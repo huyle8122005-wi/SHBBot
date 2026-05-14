@@ -17,6 +17,10 @@ export function useAuth() {
   // Check auth status on mount — always fetch fresh user data.
   useEffect(() => {
     const checkAuth = async () => {
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
@@ -46,6 +50,7 @@ export function useAuth() {
     checkAuth();
 
     // Listen for auth changes
+    if (!supabase) return;
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
         await apiClient.post("/auth/session", { 
@@ -68,6 +73,7 @@ export function useAuth() {
 
   const login = useCallback(
     async (credentials: LoginRequest) => {
+      if (!supabase) throw new Error("Supabase is not configured");
       setLoading(true);
       try {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -101,6 +107,7 @@ export function useAuth() {
 
   const register = useCallback(
     async (data: RegisterRequest) => {
+      if (!supabase) throw new Error("Supabase is not configured");
       setLoading(true);
       try {
         const { data: signUpData, error } = await supabase.auth.signUp({
@@ -126,7 +133,9 @@ export function useAuth() {
 
   const handleLogout = useCallback(async () => {
     try {
-      await supabase.auth.signOut();
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
       await apiClient.post("/auth/logout");
     } catch {
       // Ignore logout errors
@@ -139,6 +148,7 @@ export function useAuth() {
 
   const refreshToken = useCallback(async () => {
     try {
+      if (!supabase) return false;
       const { data: { session }, error } = await supabase.auth.refreshSession();
       if (error || !session) return false;
 

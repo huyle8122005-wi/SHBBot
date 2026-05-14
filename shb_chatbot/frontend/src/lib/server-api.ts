@@ -51,40 +51,45 @@ export async function backendFetch<T>(
     headers["Content-Type"] = "application/json";
   }
 
-  const response = await fetch(url, {
-    ...fetchOptions,
-    headers: {
-      ...headers,
-      ...fetchOptions.headers,
-    },
-    body,
-  }).catch(err => {
-    console.error(`Fetch failed for ${url}:`, err);
-    throw err;
-  });
+  try {
+    const response = await fetch(url, {
+      ...fetchOptions,
+      headers: {
+        ...headers,
+        ...fetchOptions.headers,
+      },
+      body: body && !(body instanceof FormData) ? JSON.stringify(body) : body as any,
+    });
 
-  if (!response.ok) {
-    let errorData;
-    try {
-      errorData = await response.json();
-    } catch {
-      errorData = null;
+    if (!response.ok) {
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = null;
+      }
+      console.error(`Backend error ${response.status} at ${url}:`, errorData);
+      throw new BackendApiError(response.status, response.statusText, errorData);
     }
-    console.error(`Backend error ${response.status} at ${url}:`, errorData);
-    throw new BackendApiError(response.status, response.statusText, errorData);
-  }
 
-  // Handle empty responses
-  const text = await response.text();
-  if (!text) {
-    return null as T;
-  }
+    // Handle empty responses
+    const text = await response.text();
+    if (!text) {
+      return null as T;
+    }
 
-  if (raw) {
-    return text as T;
-  }
+    if (raw) {
+      return text as T;
+    }
 
-  return JSON.parse(text);
+    return JSON.parse(text);
+  } catch (err) {
+    if (err instanceof BackendApiError) throw err;
+    
+    console.error(`Fetch failed for ${url}:`, err);
+    // Provide more context in the error
+    throw new Error(`Failed to connect to backend at ${url}. Ensure BACKEND_URL is correct.`);
+  }
 }
 
 /**

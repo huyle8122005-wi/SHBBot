@@ -2,12 +2,13 @@
 
 import asyncio
 import logging
+from urllib.parse import quote_plus
+
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
+
 from app.core.security import get_password_hash
 from app.db.models.user import UserRole
-import os
-from urllib.parse import quote_plus
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,10 +24,10 @@ async def initialize_db():
     encoded_pass = quote_plus(DB_PASS)
     # Force use the direct connection string with encoded password
     url = f"postgresql+asyncpg://{DB_USER}:{encoded_pass}@{DB_HOST}:5432/{DB_NAME}"
-    
+
     logger.info(f"Connecting to: {DB_HOST}")
     engine = create_async_engine(url)
-    
+
     async with engine.begin() as conn:
         try:
             logger.info("Ensuring 'users' table exists...")
@@ -44,10 +45,10 @@ async def initialize_db():
                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                 );
             """))
-            
+
             email = "admin@example.com"
             password = "admin123"
-            
+
             # Check for existing admin
             result = await conn.execute(
                 text("SELECT id FROM users WHERE email = :email"),
@@ -78,14 +79,14 @@ async def initialize_db():
                         "full_name": "System Admin"
                     }
                 )
-            
+
             logger.info("Database initialization complete!")
             logger.info(f"ADMIN LOGIN: {email} / {password}")
-            
+
         except Exception as e:
             logger.error(f"Initialization failed: {e}")
             raise
-    
+
     await engine.dispose()
 
 if __name__ == "__main__":

@@ -24,8 +24,9 @@ def server_cli():
 @click.option("--reload", is_flag=True, help="Enable auto-reload")
 def server_run(host: str, port: int, reload: bool):
     """Run the development server."""
-    import uvicorn
     import os
+
+    import uvicorn
 
     # Respect PORT environment variable if set (for Render/Heroku)
     env_port = os.environ.get("PORT")
