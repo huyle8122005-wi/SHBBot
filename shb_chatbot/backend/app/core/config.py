@@ -68,10 +68,16 @@ class Settings(BaseSettings):
                 f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
             )
 
-        # Add SSL requirement for Supabase if not already present
-        if "supabase.co" in url and "ssl=" not in url:
-            separator = "&" if "?" in url else "?"
-            url += f"{separator}ssl=require"
+        # asyncpg does not accept sslmode. Replace it with ssl=require
+        url = url.replace("sslmode=require", "")
+        url = url.replace("sslmode=disable", "")
+        if url.endswith("?"): url = url[:-1]
+        if url.endswith("&"): url = url[:-1]
+        
+        if "supabase.com" in url or "supabase.co" in url:
+            if "ssl=" not in url:
+                separator = "&" if "?" in url else "?"
+                url += f"{separator}ssl=require"
 
         return url
 
