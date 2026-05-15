@@ -51,8 +51,8 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "shb_chatbot"
 
     # Allow overriding full URLs from environment
-    DATABASE_URL_OVERRIDE: str | None = pydantic.Field(default=None, alias="DATABASE_URL")
-    DATABASE_URL_SYNC_OVERRIDE: str | None = pydantic.Field(default=None, alias="DATABASE_URL_SYNC")
+    DATABASE_URL_OVERRIDE: str | None = pydantic.Field(default="postgresql+asyncpg://postgres:[@SHBchatbot]@db.aehzparpmmjdzpxkuwic.supabase.co:5432/postgres?ssl=require", alias="DATABASE_URL")
+    DATABASE_URL_SYNC_OVERRIDE: str | None = pydantic.Field(default="postgresql://postgres:[@SHBchatbot]@db.aehzparpmmjdzpxkuwic.supabase.co:5432/postgres?sslmode=require", alias="DATABASE_URL_SYNC")
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -178,7 +178,7 @@ class Settings(BaseSettings):
 
     # === AI Agent (pydantic_ai, openai/gemini) ===
     OPENAI_API_KEY: str = ""
-    GEMINI_API_KEY: str = ""
+    GEMINI_API_KEY: str = "AIzaSyBYVDgrlm2v_X0F3w3tGBnQQe2lQAw-Pr0"
     AI_MODEL: str = "gemini-2.5-flash"
     AI_TEMPERATURE: float = 0.7
     AI_AVAILABLE_MODELS: list[str] = [
@@ -205,7 +205,7 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = "openai"
 
     # === VNStock ===
-    VNSTOCK_API_KEY: str = ""
+    VNSTOCK_API_KEY: str = "vnstock_7425c01a5b5ea74b2383aa884c19a3f9"
 
     # === CORS ===
     CORS_ORIGINS: list[str] = [
