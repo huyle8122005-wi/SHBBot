@@ -69,9 +69,9 @@ class Settings(BaseSettings):
             )
 
         # Add SSL requirement for Supabase if not already present
-        if "supabase.co" in url and "sslmode=" not in url:
+        if "supabase.co" in url and "ssl=" not in url:
             separator = "&" if "?" in url else "?"
-            url += f"{separator}sslmode=require"
+            url += f"{separator}ssl=require"
 
         return url
 
