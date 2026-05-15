@@ -103,9 +103,9 @@ class Settings(BaseSettings):
 
     # === Auth (SECRET_KEY for JWT/Session/Admin) ===
     SECRET_KEY: str = "change-me-in-production-use-openssl-rand-hex-32"
-    SUPABASE_JWT_SECRET: str | None = None
-    SUPABASE_URL: str | None = None
-    SUPABASE_ANON_KEY: str | None = None
+    SUPABASE_JWT_SECRET: str | None = "oQKNGiMU5qhoQdo6xWkJc/bsCUiaMDd+bBR6icsraOn2r+AVv+tgan5jM8RrAkRW1ojAIM4EdW/iltNLvCbQXw=="
+    SUPABASE_URL: str | None = "https://aehzparpmmjdzpxkuwic.supabase.co"
+    SUPABASE_ANON_KEY: str | None = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlaHpwYXJwbW1qZHpweGt1d2ljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MzcyNTAsImV4cCI6MjA5NDAxMzI1MH0.89q-QUjJRLsoQvJMS0wjZOUkt13c8wa_M_uavpwYp6E"
 
     @field_validator("SECRET_KEY")
     @classmethod
