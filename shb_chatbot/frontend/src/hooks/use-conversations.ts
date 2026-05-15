@@ -1,9 +1,9 @@
 
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import { apiClient } from "@/lib/api-client";
-import { useConversationStore, useChatStore } from "@/stores";
+import { useConversationStore, useChatStore, useAuthStore, useGuestConversationStore } from "@/stores";
 import type {
   Conversation,
   ConversationMessage,
@@ -24,8 +24,10 @@ interface MessagesResponse {
 }
 
 export function useConversations() {
+  const { isAuthenticated } = useAuthStore();
+  const guestStore = useGuestConversationStore();
   const {
-    conversations,
+    conversations: authConversations,
     currentConversationId,
     currentMessages,
     isLoading,
@@ -43,7 +45,19 @@ export function useConversations() {
   const hasMoreRef = useRef(true);
   const PAGE_SIZE = 30;
 
+  // Sync guest conversations to the standard Conversation array format
+  const conversations = isAuthenticated 
+    ? authConversations 
+    : guestStore.conversations.map(c => ({
+        id: c.id,
+        title: c.title,
+        created_at: c.updatedAt,
+        updated_at: c.updatedAt,
+        is_archived: false,
+      }));
+
   const fetchConversations = useCallback(async () => {
+    if (!isAuthenticated) return;
     setLoading(true);
     setError(null);
     try {
@@ -72,12 +86,12 @@ export function useConversations() {
     } finally {
       setLoading(false);
     }
-  }, [setConversations, setLoading, setError, setCurrentConversationId, setCurrentMessages, clearMessages]);
+  }, [setConversations, setLoading, setError, setCurrentConversationId, setCurrentMessages, clearMessages, isAuthenticated]);
 
   const loadingMoreRef = useRef(false);
 
   const fetchMoreConversations = useCallback(async () => {
-    if (!hasMoreRef.current || loadingMoreRef.current) return;
+    if (!isAuthenticated || !hasMoreRef.current || loadingMoreRef.current) return;
     loadingMoreRef.current = true;
     const current = useConversationStore.getState().conversations;
     try {
@@ -91,10 +105,13 @@ export function useConversations() {
     } catch {} finally {
       loadingMoreRef.current = false;
     }
-  }, [setConversations]);
+  }, [setConversations, isAuthenticated]);
 
   const createConversation = useCallback(
     async (title?: string): Promise<Conversation | null> => {
+      if (!isAuthenticated) {
+        return null;
+      }
       setLoading(true);
       setError(null);
       try {
@@ -120,7 +137,7 @@ export function useConversations() {
         setLoading(false);
       }
     },
-    [addConversation, setLoading, setError]
+    [addConversation, setLoading, setError, isAuthenticated]
   );
 
   const selectConversation = useCallback(
@@ -130,6 +147,37 @@ export function useConversations() {
       const url = new URL(window.location.href);
       url.searchParams.set("id", id);
       window.history.replaceState({}, "", url.toString());
+      
+      if (!isAuthenticated) {
+        const guestConv = guestStore.getConversation(id);
+        if (guestConv) {
+          // Convert ChatMessage to ConversationMessage format if needed, 
+          // but our chat-container can just read from the store directly if we set currentMessages.
+          // Since ChatMessage is not exactly ConversationMessage, we'll map the basic fields
+          setCurrentMessages(guestConv.messages.map(m => ({
+            id: m.id,
+            conversation_id: id,
+            role: m.role,
+            content: m.content,
+            created_at: m.timestamp.toISOString(),
+            tool_calls: m.toolCalls?.map(tc => ({
+              id: tc.id,
+              tool_call_id: tc.id,
+              tool_name: tc.name,
+              args: tc.args,
+              result: tc.result,
+              status: tc.status === "error" ? "failed" : tc.status
+            })),
+            user_rating: m.user_rating,
+            rating_count: m.rating_count,
+            files: m.fileIds?.map(fid => ({ id: fid }))
+          } as any)));
+        } else {
+          setCurrentMessages([]);
+        }
+        return;
+      }
+
       setLoading(true);
       setError(null);
       try {
@@ -145,11 +193,12 @@ export function useConversations() {
         setLoading(false);
       }
     },
-    [setCurrentConversationId, clearMessages, setCurrentMessages, setLoading, setError]
+    [setCurrentConversationId, clearMessages, setCurrentMessages, setLoading, setError, isAuthenticated, guestStore]
   );
 
   const archiveConversation = useCallback(
     async (id: string) => {
+      if (!isAuthenticated) return;
       try {
         await apiClient.patch(`/conversations/${id}`, { is_archived: true });
         updateConversation(id, { is_archived: true });
@@ -159,11 +208,20 @@ export function useConversations() {
         setError(message);
       }
     },
-    [updateConversation, setError]
+    [updateConversation, setError, isAuthenticated]
   );
 
   const deleteConversation = useCallback(
     async (id: string) => {
+      if (!isAuthenticated) {
+        guestStore.deleteConversation(id);
+        if (useConversationStore.getState().currentConversationId === id) {
+          setCurrentConversationId(null);
+          clearMessages();
+          setCurrentMessages([]);
+        }
+        return;
+      }
       try {
         await apiClient.delete(`/conversations/${id}`);
         removeConversation(id);
@@ -173,11 +231,15 @@ export function useConversations() {
         setError(message);
       }
     },
-    [removeConversation, setError]
+    [removeConversation, setError, isAuthenticated, guestStore, setCurrentConversationId, clearMessages, setCurrentMessages]
   );
 
   const renameConversation = useCallback(
     async (id: string, title: string) => {
+      if (!isAuthenticated) {
+        guestStore.renameConversation(id, title);
+        return;
+      }
       try {
         await apiClient.patch(`/conversations/${id}`, { title });
         updateConversation(id, { title });
@@ -187,7 +249,7 @@ export function useConversations() {
         setError(message);
       }
     },
-    [updateConversation, setError]
+    [updateConversation, setError, isAuthenticated, guestStore]
   );
 
   const startNewChat = useCallback(async () => {
@@ -195,21 +257,27 @@ export function useConversations() {
     const currentId = useConversationStore.getState().currentConversationId;
     if (currentId) {
       const msgs = useConversationStore.getState().currentMessages;
-      if (msgs.length === 0) {
+      if (msgs.length === 0 && isAuthenticated) {
         clearMessages();
         return;
       }
     }
     clearMessages();
     setCurrentMessages([]);
-    const newConversation = await createConversation();
-    if (newConversation) {
-      setCurrentConversationId(newConversation.id);
-      const url = new URL(window.location.href);
-      url.searchParams.set("id", newConversation.id);
-      window.history.replaceState({}, "", url.toString());
+    setCurrentConversationId(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("id");
+    window.history.replaceState({}, "", url.toString());
+
+    if (isAuthenticated) {
+      const newConversation = await createConversation();
+      if (newConversation) {
+        setCurrentConversationId(newConversation.id);
+        url.searchParams.set("id", newConversation.id);
+        window.history.replaceState({}, "", url.toString());
+      }
     }
-  }, [clearMessages, setCurrentMessages, createConversation, setCurrentConversationId]);
+  }, [clearMessages, setCurrentMessages, createConversation, setCurrentConversationId, isAuthenticated]);
 
   return {
     conversations,
@@ -219,7 +287,7 @@ export function useConversations() {
     error,
     fetchConversations,
     fetchMoreConversations,
-    hasMore: hasMoreRef.current,
+    hasMore: isAuthenticated ? hasMoreRef.current : false,
     createConversation,
     selectConversation,
     archiveConversation,

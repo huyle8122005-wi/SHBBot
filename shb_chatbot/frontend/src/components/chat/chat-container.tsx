@@ -9,7 +9,7 @@ import { ToolApprovalDialog } from "./tool-approval-dialog";
 import { Bot, ChevronDown, Check, Sparkles, TrendingUp, ShieldAlert, BarChart3, Globe2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui";
 import type { PendingApproval, Decision } from "@/types";
-import { useConversationStore, useChatStore } from "@/stores";
+import { useConversationStore, useChatStore, useGuestConversationStore } from "@/stores";
 import { useConversations } from "@/hooks";
 
 import { useAuthStore } from "@/stores";
@@ -23,6 +23,7 @@ function AuthenticatedChatContainer() {
   const { addMessage: addChatMessage } = useChatStore();
   const { fetchConversations } = useConversations();
   const { isAuthenticated } = useAuthStore();
+  const { saveConversation } = useGuestConversationStore();
   const prevConversationIdRef = useRef<string | null | undefined>(undefined);
 
   const handleConversationCreated = useCallback((conversationId: string) => {
@@ -46,6 +47,15 @@ function AuthenticatedChatContainer() {
     conversationId: currentConversationId,
     onConversationCreated: handleConversationCreated,
   });
+
+  // Save guest conversation automatically
+  useEffect(() => {
+    if (!isAuthenticated && currentConversationId && messages.length > 0) {
+      const firstUserMsg = messages.find(m => m.role === 'user');
+      const title = firstUserMsg ? firstUserMsg.content.slice(0, 50) : "New conversation";
+      saveConversation(currentConversationId, title, messages);
+    }
+  }, [messages, currentConversationId, isAuthenticated, saveConversation]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);

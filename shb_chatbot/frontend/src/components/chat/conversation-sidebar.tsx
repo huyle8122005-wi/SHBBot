@@ -221,21 +221,25 @@ function ConversationList({
           onLoadMore?.();
         }
       }}>
-        {!isAuthenticated ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center text-sm text-muted-foreground px-2">
-            <Archive className="h-8 w-8 mb-2 opacity-50" />
-            <p className="font-medium text-foreground">Guest Mode</p>
-            <p className="text-xs mt-2">Log in to save and manage your conversation history.</p>
-          </div>
-        ) : isLoading && conversations.length === 0 ? (
+        {isLoading && conversations.length === 0 ? (
           <div className="space-y-2 py-2">
             {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-9 w-full rounded-md" />)}
           </div>
         ) : activeConversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center text-sm text-muted-foreground">
-            <MessageSquare className="h-8 w-8 mb-2 opacity-50" />
-            <p>No conversations yet</p>
-            <p className="text-xs mt-1">Start a new chat to begin</p>
+          <div className="flex flex-col items-center justify-center py-8 text-center text-sm text-muted-foreground px-2">
+            {!isAuthenticated ? (
+              <>
+                <Archive className="h-8 w-8 mb-2 opacity-50" />
+                <p className="font-medium text-foreground">Guest Mode</p>
+                <p className="text-xs mt-2">Log in to sync your history across devices. Your last 5 chats are saved locally.</p>
+              </>
+            ) : (
+              <>
+                <MessageSquare className="h-8 w-8 mb-2 opacity-50" />
+                <p>No conversations yet</p>
+                <p className="text-xs mt-1">Start a new chat to begin</p>
+              </>
+            )}
           </div>
         ) : (
           <div className="space-y-1">
