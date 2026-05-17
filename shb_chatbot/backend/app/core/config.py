@@ -51,8 +51,8 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "shb_chatbot"
 
     # Allow overriding full URLs from environment
-    DATABASE_URL_OVERRIDE: str | None = pydantic.Field(default="postgresql+asyncpg://postgres:[@SHBchatbot]@db.aehzparpmmjdzpxkuwic.supabase.co:5432/postgres?ssl=require", alias="DATABASE_URL")
-    DATABASE_URL_SYNC_OVERRIDE: str | None = pydantic.Field(default="postgresql://postgres:[@SHBchatbot]@db.aehzparpmmjdzpxkuwic.supabase.co:5432/postgres?sslmode=require", alias="DATABASE_URL_SYNC")
+    DATABASE_URL_OVERRIDE: str | None = pydantic.Field(default=None, alias="DATABASE_URL")
+    DATABASE_URL_SYNC_OVERRIDE: str | None = pydantic.Field(default=None, alias="DATABASE_URL_SYNC")
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -109,9 +109,9 @@ class Settings(BaseSettings):
 
     # === Auth (SECRET_KEY for JWT/Session/Admin) ===
     SECRET_KEY: str = "change-me-in-production-use-openssl-rand-hex-32"
-    SUPABASE_JWT_SECRET: str | None = "oQKNGiMU5qhoQdo6xWkJc/bsCUiaMDd+bBR6icsraOn2r+AVv+tgan5jM8RrAkRW1ojAIM4EdW/iltNLvCbQXw=="
-    SUPABASE_URL: str | None = "https://aehzparpmmjdzpxkuwic.supabase.co"
-    SUPABASE_ANON_KEY: str | None = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlaHpwYXJwbW1qZHpweGt1d2ljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MzcyNTAsImV4cCI6MjA5NDAxMzI1MH0.89q-QUjJRLsoQvJMS0wjZOUkt13c8wa_M_uavpwYp6E"
+    SUPABASE_JWT_SECRET: str | None = None
+    SUPABASE_URL: str | None = None
+    SUPABASE_ANON_KEY: str | None = None
 
     @field_validator("SECRET_KEY")
     @classmethod
@@ -184,7 +184,7 @@ class Settings(BaseSettings):
 
     # === AI Agent (pydantic_ai, openai/gemini) ===
     OPENAI_API_KEY: str = ""
-    GEMINI_API_KEY: str = "AIzaSyDg9T24El8-TCe2ME_idNKwOTYC_VbKmIA"
+    GEMINI_API_KEY: str = ""
     AI_MODEL: str = "gemini-2.5-flash"
     AI_TEMPERATURE: float = 0.7
     AI_AVAILABLE_MODELS: list[str] = [
@@ -211,7 +211,7 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = "openai"
 
     # === VNStock ===
-    VNSTOCK_API_KEY: str = "vnstock_7425c01a5b5ea74b2383aa884c19a3f9"
+    VNSTOCK_API_KEY: str = ""
 
     # === CORS ===
     CORS_ORIGINS: list[str] = [

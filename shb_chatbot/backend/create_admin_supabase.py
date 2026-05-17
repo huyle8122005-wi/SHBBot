@@ -5,11 +5,10 @@ from sqlalchemy import create_engine, text
 
 
 def create_admin_sync():
-    password = "[@SHBchatbot]"
-    encoded_pass = quote_plus(password)
-    # Sync URL
-    url = f"postgresql://postgres:{encoded_pass}@db.aehzparpmmjdzpxkuwic.supabase.co:5432/postgres"
-    print("Connecting (Sync) to Supabase...")
+    # Use sync URL from settings
+    from app.core.config import settings
+    url = settings.DATABASE_URL_SYNC or f"postgresql://postgres:password@localhost:5432/postgres"
+    print(f"Connecting (Sync) to database...")
 
     engine = create_engine(url)
 
